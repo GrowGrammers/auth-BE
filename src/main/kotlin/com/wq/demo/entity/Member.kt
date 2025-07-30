@@ -6,5 +6,6 @@ import jakarta.persistence.*
 open class Member(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     open val id: Long = 0,
-    open val name: String = ""
+    open val name: String = "",
+    var nickname: String = ""
 )
