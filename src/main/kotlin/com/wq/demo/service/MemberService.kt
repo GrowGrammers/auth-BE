@@ -14,4 +14,14 @@ class MemberService(private val memberRepository: MemberRepository) {
     fun create(member: Member): Member = memberRepository.save(member)
 
     fun delete(id: Long) = memberRepository.deleteById(id)
+
+    fun updateNickname(id: Long, newNickname: String): Member? {
+        val member = memberRepository.findById(id).orElse(null)
+        member?.let {
+            it.nickname = newNickname
+            return memberRepository.save(it)
+        }
+        return null
+    }
+
 }

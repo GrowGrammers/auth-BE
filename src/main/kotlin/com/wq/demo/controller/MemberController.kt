@@ -19,4 +19,14 @@ class MemberController(private val memberService: MemberService) {
 
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long) = memberService.delete(id)
+
+    @PutMapping("/{id}/nickname")
+    fun updateNickname(
+        @PathVariable id: Long,
+        @RequestBody payload: Map<String, String>
+    ): Member? {
+        val newNickname = payload["nickname"] ?: return null
+        return memberService.updateNickname(id, newNickname)
+    }
+
 }
