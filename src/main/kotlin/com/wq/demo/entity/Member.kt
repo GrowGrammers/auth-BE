@@ -1,8 +1,10 @@
+package com.wq.demo.entity
+
 import jakarta.persistence.*
 
 @Entity
-class Member(
+open class Member(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
-    val name: String = ""
+    open val id: Long = 0,
+    open val name: String = ""
 )
