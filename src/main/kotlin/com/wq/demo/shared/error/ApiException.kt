@@ -5,7 +5,7 @@ package com.wq.demo.shared.error
  * ApiCode를 통해 HTTP 상태코드와 메시지를 함께 보관.
  */
 open class ApiException(
-    val code: ApiCode,
+    val code: ApiResponseCode,
     cause: Throwable? = null
 ) : RuntimeException(code.getMessage(), cause) {
 

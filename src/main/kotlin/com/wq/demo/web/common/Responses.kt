@@ -1,6 +1,6 @@
 package com.wq.demo.web.common
 
-import com.wq.demo.shared.error.ApiCode
+import com.wq.demo.shared.error.ApiResponseCode
 
 object Responses {
     fun <T> success(
@@ -9,6 +9,6 @@ object Responses {
     ) : BaseResponse<T> =
         BaseResponse(true, message, data, null)
 
-    fun fail(code: ApiCode) : BaseResponse<Nothing> =
+    fun fail(code: ApiResponseCode) : BaseResponse<Nothing> =
         BaseResponse(false, code.getMessage(), null, code.toString())
 }
