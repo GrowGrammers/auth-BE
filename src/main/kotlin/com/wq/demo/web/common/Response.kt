@@ -1,22 +1,21 @@
 package com.wq.demo.web.common
 
+import com.wq.demo.shared.error.ApiCode
+
 data class BaseResponse<T> (
     val success: Boolean,
     val message: String,
     val data: T?,
-    val error: String?
+    val error: String? = null
 )
 
 object Responses {
-    fun <T> success(message: String) : BaseResponse<T> =
-        BaseResponse(true, message, null, null)
-
-    fun <T> success(data: T?) : BaseResponse<T> =
-         BaseResponse(true, "요청에 성공하였습니다.", data, null)
-
-    fun <T> success(message: String, data: T?) : BaseResponse<T> =
+    fun <T> success(
+        message: String = "요청에 성공적으로 응답하였습니다.",
+        data: T? = null
+    ) : BaseResponse<T> =
         BaseResponse(true, message, data, null)
 
-    fun <T> fail(message: String) : BaseResponse<T> =
-        BaseResponse(false, message, null, null)
+    fun fail(code: ApiCode) : BaseResponse<Nothing> =
+        BaseResponse(false, code.getMessage(), null, code.toString())
 }
