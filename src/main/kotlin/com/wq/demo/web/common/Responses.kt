@@ -7,8 +7,8 @@ object Responses {
         message: String = "요청에 성공적으로 응답하였습니다.",
         data: T? = null
     ) : BaseResponse<T> =
-        BaseResponse(true, message, data, null)
+        BaseResponse(true, message, data)
 
     fun fail(code: ApiResponseCode) : BaseResponse<Nothing> =
-        BaseResponse(false, code.getMessage(), null, code.toString())
+        BaseResponse(false, code.getMessage(), null)
 }
