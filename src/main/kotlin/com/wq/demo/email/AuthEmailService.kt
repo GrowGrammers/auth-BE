@@ -16,6 +16,11 @@ class AuthEmailService (
         sendEmail(email, "인증 코드", "인증 코드는 $code 입니다.")
     }
 
+    fun verifyCode(email: String, code: String): Boolean {
+        val savedCode = emailRepository.findByEmail(email)?.code
+        return savedCode == code
+    }
+
     fun sendEmail(to: String, subject: String, text: String) {
         val message = SimpleMailMessage()
         message.setTo(to)

@@ -18,4 +18,10 @@ class AuthEmailController (
         return BaseResponse(success = true, message = "해당 이메일로 인증코드가 발송되었습니다.", data = null)
     }
 
+    @PostMapping("/verify")
+    fun verifyCode(@RequestBody req: EmailVerifyRequestDto): BaseResponse<Unit> {
+        val verified = authEmailService.verifyCode(req.email, req.code)
+        return if (verified) BaseResponse(success = true, message = "인증되었습니다." , data = null)
+        else BaseResponse(success = false, message = "인증에 실패했습니다.", data = null)
+    }
 }
