@@ -5,5 +5,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface AuthEmailRepository : JpaRepository<EmailVerification, String> {
-
+    fun findByEmail(email: String): EmailVerification?
 }
