@@ -13,7 +13,6 @@ class AuthEmailController (
 ) {
     @PostMapping("/request")
     fun requestCode(@RequestBody req: EmailRequestDto): BaseResponse<Unit> {
-        println("requestCode")
         authEmailService.sendVerificationCode(req.email)
         return BaseResponse(success = true, message = "해당 이메일로 인증코드가 발송되었습니다.", data = null)
     }
