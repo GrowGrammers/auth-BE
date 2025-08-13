@@ -22,10 +22,7 @@ class AuthEmailService (
     }
 
     fun sendEmail(to: String, subject: String, text: String) {
-        val message = SimpleMailMessage()
-        message.setTo(to)
-        message.setSubject(subject)
-        message.setText(text)
+        val message = MailMessage.of(to, subject, text)
         mailSender.send(message)
     }
 }
