@@ -6,7 +6,7 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "email_verification")
-data class EmailVerification(
+data class EmailVerificationEntity(
     @Id
     val email: String,
     val code: String

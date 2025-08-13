@@ -11,7 +11,7 @@ class AuthEmailService (
 ) {
     fun sendVerificationCode(email: String) {
         val code = generateRandomCode()
-        emailRepository.save(EmailVerification(email, code))
+        emailRepository.save(EmailVerificationEntity(email, code))
         sendEmail(email, "인증 코드", "인증 코드는 $code 입니다.")
     }
 
