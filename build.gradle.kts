@@ -55,6 +55,11 @@ dependencies {
 	testImplementation("com.fasterxml.jackson.core:jackson-databind:2.17.+")
 	testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.+")
 	testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.+")
+
+	// jjwt
+	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 }
 
 kotlin {
