@@ -1,4 +1,8 @@
 spring:
+  profiles:
+    active:
+      - jwt
+
   application:
     name: auth-BE
 
