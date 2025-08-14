@@ -12,19 +12,19 @@ open class MemberEntity(
     open val id: Long = 0,
 
     @Column(name = "provider_id")
-    val providerId: String? = null,
+    open val providerId: String? = null,
 
-    var nickname: String = "",
+    open var nickname: String = "",
 
-    val role: Role = Role.MEMBER,
+    open val role: Role = Role.MEMBER,
 
     @Column(name = "is_email_verified", nullable = false)
-    var isEmailVerified: Boolean = false,
+    open var isEmailVerified: Boolean = false,
 
     @Column(name = "last_login_at")
-    var lastLoginAt: LocalDateTime? = null,
+    open var lastLoginAt: LocalDateTime? = null,
 
     @Column(name = "is_deleted", nullable = false)
-    var isDeleted: Boolean = false,
+    open var isDeleted: Boolean = false,
 
     ) : BaseEntity()
