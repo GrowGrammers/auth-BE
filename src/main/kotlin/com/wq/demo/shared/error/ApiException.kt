@@ -7,7 +7,7 @@ package com.wq.demo.shared.error
 open class ApiException(
     val code: ApiResponseCode,
     cause: Throwable? = null
-) : RuntimeException(code.getMessage(), cause) {
+) : RuntimeException(code.message, cause) {
 
     val className: String
     val methodName: String
