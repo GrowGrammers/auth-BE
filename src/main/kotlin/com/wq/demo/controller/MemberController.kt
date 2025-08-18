@@ -1,6 +1,6 @@
 package com.wq.demo.controller
 
-import com.wq.demo.entity.Member
+import com.wq.demo.entity.MemberEntity
 import com.wq.demo.service.MemberService
 import org.springframework.web.bind.annotation.*
 
@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.*
 class MemberController(private val memberService: MemberService) {
 
     @GetMapping
-    fun getAll(): List<Member> = memberService.getAll()
+    fun getAll(): List<MemberEntity> = memberService.getAll()
 
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: Long): Member? = memberService.getById(id)
+    fun getById(@PathVariable id: Long): MemberEntity? = memberService.getById(id)
 
     @PostMapping
-    fun create(@RequestBody member: Member): Member = memberService.create(member)
+    fun create(@RequestBody member: MemberEntity): MemberEntity = memberService.create(member)
 
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long) = memberService.delete(id)
@@ -24,7 +24,7 @@ class MemberController(private val memberService: MemberService) {
     fun updateNickname(
         @PathVariable id: Long,
         @RequestBody payload: Map<String, String>
-    ): Member? {
+    ): MemberEntity? {
         val newNickname = payload["nickname"] ?: return null
         return memberService.updateNickname(id, newNickname)
     }
