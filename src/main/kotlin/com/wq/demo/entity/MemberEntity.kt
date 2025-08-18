@@ -16,6 +16,7 @@ open class MemberEntity(
 
     open var nickname: String = "",
 
+    @Enumerated(EnumType.STRING)
     open val role: Role = Role.MEMBER,
 
     @Column(name = "is_email_verified", nullable = false)
