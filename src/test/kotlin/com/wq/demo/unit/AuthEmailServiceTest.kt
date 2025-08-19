@@ -8,7 +8,6 @@ import com.wq.demo.email.error.EmailExceptionCode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.assertions.throwables.shouldThrow
-import jakarta.mail.internet.AddressException
 import org.mockito.kotlin.*
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.mail.javamail.JavaMailSender
