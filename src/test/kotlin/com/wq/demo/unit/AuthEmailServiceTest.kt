@@ -46,7 +46,7 @@ class AuthEmailServiceTest : StringSpec({
             .send(any<SimpleMailMessage>())
 
         shouldThrow<IllegalStateException> {
-            authEmailService.sendEmail(email, "제목", "본문")
+            authEmailService.sendEmail(email, "인증코드", "인증 코드는 $code 입니다.")
         }
     }
 
