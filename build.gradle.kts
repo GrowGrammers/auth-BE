@@ -44,7 +44,6 @@ dependencies {
 	testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
 
 
-
 	// Kotest 버전 변수로 관리
 	val kotestVersion = "5.9.1"
 
