@@ -1,5 +1,6 @@
 package com.wq.demo.email
 
+import com.wq.demo.email.error.*
 import com.wq.demo.shared.utils.VerificationCodeGenerator.generateRandomCode
 import jakarta.mail.internet.InternetAddress
 import org.springframework.mail.javamail.JavaMailSender
@@ -21,9 +22,12 @@ class AuthEmailService(
         emailRepository.save(EmailVerificationEntity(email, code))
     }
 
-    fun verifyCode(email: String, code: String): Boolean {
+    fun verifyCode(email: String, code: String) {
         val savedCode = emailRepository.findByEmail(email)?.code
-        return savedCode == code
+
+        if (savedCode == null || savedCode != code) {
+            throw EmailException(EmailExceptionCode.EMAIL_VERIFICATION_FAILED)
+        }
     }
 
     fun sendEmail(to: String, subject: String, text: String) {
@@ -31,13 +35,17 @@ class AuthEmailService(
         try {
             mailSender.send(message)
         } catch (e: Exception) {
-            // SMTP 단계에서 도메인 불가 / 연결 불가 등은 여기서 잡힘
-            throw IllegalStateException("메일 전송 실패: ${e.message}", e)
+            throw EmailException(EmailExceptionCode.EMAIL_NOT_SENDED, e)
         }
     }
 
     private fun validateEmailFormat(email: String) {
-        InternetAddress(email).validate()
+        try {
+            InternetAddress(email).validate()
+        } catch (e: Exception) {
+            // 유효성 검사 실패 시 EmailException으로 변환
+            throw EmailException(EmailExceptionCode.INVALID_EMAIL_FORMAT)
+        }
     }
 
     private fun validateDomain(email: String) {
@@ -51,11 +59,11 @@ class AuthEmailService(
             val mxAttr = attrs.get("MX")
             //도메인은 존재하지만 MX 레코드가 없는 경우
             if (mxAttr == null || mxAttr.size() == 0) {
-                throw IllegalArgumentException("존재하지 않는 도메인입니다: $domain")
+                throw EmailException(EmailExceptionCode.EMAIL_SERVER_NOT_FOUND)
             }
             //도메인 자체가 없는 경우
         } catch (e: javax.naming.NamingException) {
-            throw IllegalArgumentException("존재하지 않는 도메인입니다: $domain", e)
+            throw EmailException(EmailExceptionCode.DOMAIN_NOT_FOUND,e)
         }
     }
 }
