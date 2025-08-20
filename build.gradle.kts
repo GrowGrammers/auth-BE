@@ -32,6 +32,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.springframework.boot:spring-boot-starter-mail")
 	implementation("me.paulschwarz:spring-dotenv:4.0.0")
+	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("com.h2database:h2")
 	implementation("org.springframework.boot:spring-boot-starter-logging")
 
@@ -40,7 +41,6 @@ dependencies {
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
-
 
 
 	// Kotest 버전 변수로 관리
