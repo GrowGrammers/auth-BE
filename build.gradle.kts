@@ -32,7 +32,6 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.springframework.boot:spring-boot-starter-mail")
 	implementation("me.paulschwarz:spring-dotenv:4.0.0")
-	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("com.h2database:h2")
 	implementation("org.springframework.boot:spring-boot-starter-logging")
 
