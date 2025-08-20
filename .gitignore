@@ -9,6 +9,8 @@
 # 환경 변수
 .env
 
+.idea
+
 # Created by git when using merge tools for conflicts
 *.BACKUP.*
 *.BASE.*
