@@ -6,6 +6,9 @@
 # $ git config --global mergetool.keepBackup false
 *.orig
 
+# 환경 변수
+.env
+
 # Created by git when using merge tools for conflicts
 *.BACKUP.*
 *.BASE.*
