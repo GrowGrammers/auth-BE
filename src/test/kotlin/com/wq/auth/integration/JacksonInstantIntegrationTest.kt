@@ -17,8 +17,14 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
+@SpringBootTest(
+    properties = [
+        "jwt.secret=MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=",
+        "jwt.access-exp=15m",
+        "jwt.refresh-exp=14d"
+    ]
+)
 @AutoConfigureMockMvc
-@SpringBootTest
 class JacksonInstantIntegrationTest(
     private val repo: _TNoteRepository,
     private val mockMvc: MockMvc,

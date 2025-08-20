@@ -76,9 +76,6 @@ allOpen {
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
-tasks.test {
-	useJUnitPlatform()
-}
 noArg {
 	annotation("jakarta.persistence.Entity")
 }
