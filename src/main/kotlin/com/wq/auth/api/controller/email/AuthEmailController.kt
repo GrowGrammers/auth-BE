@@ -6,10 +6,7 @@ import com.wq.auth.api.domain.email.AuthEmailService
 import com.wq.auth.api.domain.email.error.EmailException
 import com.wq.auth.web.common.response.BaseResponse
 import com.wq.auth.web.common.response.Responses
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 class AuthEmailController(
