@@ -1,5 +1,6 @@
-package com.wq.auth.email
+package com.wq.auth.api.domain.email
 
+import com.wq.auth.api.domain.email.entity.EmailVerificationEntity
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface AuthEmailRepository : JpaRepository<EmailVerificationEntity, String> {

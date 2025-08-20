@@ -1,7 +1,7 @@
-package com.wq.auth.controller
+package com.wq.auth.api.controller.member
 
-import com.wq.auth.entity.MemberEntity
-import com.wq.auth.service.MemberService
+import com.wq.auth.api.domain.member.entity.MemberEntity
+import com.wq.auth.api.domain.member.MemberService
 import org.springframework.web.bind.annotation.*
 
 @RestController

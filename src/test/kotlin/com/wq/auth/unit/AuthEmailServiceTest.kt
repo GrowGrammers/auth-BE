@@ -1,10 +1,10 @@
 package com.wq.auth.unit
 
-import com.wq.auth.email.AuthEmailRepository
-import com.wq.auth.email.AuthEmailService
-import com.wq.auth.email.EmailVerificationEntity
-import com.wq.auth.email.error.EmailException
-import com.wq.auth.email.error.EmailExceptionCode
+import com.wq.auth.api.domain.email.AuthEmailRepository
+import com.wq.auth.api.domain.email.AuthEmailService
+import com.wq.auth.api.domain.email.entity.EmailVerificationEntity
+import com.wq.auth.api.domain.email.error.EmailException
+import com.wq.auth.api.domain.email.error.EmailExceptionCode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.assertions.throwables.shouldThrow

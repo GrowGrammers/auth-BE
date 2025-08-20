@@ -1,6 +1,9 @@
-package com.wq.auth.email
+package com.wq.auth.api.controller.email
 
-import com.wq.auth.email.error.EmailException
+import com.wq.auth.api.controller.email.request.EmailRequestDto
+import com.wq.auth.api.controller.email.request.EmailVerifyRequestDto
+import com.wq.auth.api.domain.email.AuthEmailService
+import com.wq.auth.api.domain.email.error.EmailException
 import com.wq.auth.web.common.response.BaseResponse
 import com.wq.auth.web.common.response.Responses
 import org.springframework.web.bind.annotation.PostMapping

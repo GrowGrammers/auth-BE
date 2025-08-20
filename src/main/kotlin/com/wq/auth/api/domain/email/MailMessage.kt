@@ -1,4 +1,4 @@
-package com.wq.auth.email
+package com.wq.auth.api.domain.email
 
 import org.springframework.mail.SimpleMailMessage
 

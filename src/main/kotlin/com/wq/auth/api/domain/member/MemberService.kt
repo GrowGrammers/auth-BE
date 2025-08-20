@@ -1,7 +1,6 @@
-package com.wq.auth.service
+package com.wq.auth.api.domain.member
 
-import com.wq.auth.entity.MemberEntity
-import com.wq.auth.repository.MemberRepository
+import com.wq.auth.api.domain.member.entity.MemberEntity
 import org.springframework.stereotype.Service
 
 @Service

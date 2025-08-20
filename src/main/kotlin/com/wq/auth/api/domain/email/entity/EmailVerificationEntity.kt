@@ -1,4 +1,4 @@
-package com.wq.auth.email
+package com.wq.auth.api.domain.email.entity
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Id

@@ -1,6 +1,8 @@
-package com.wq.auth.email
+package com.wq.auth.api.domain.email
 
-import com.wq.auth.email.error.*
+import com.wq.auth.api.domain.email.entity.EmailVerificationEntity
+import com.wq.auth.api.domain.email.error.EmailException
+import com.wq.auth.api.domain.email.error.EmailExceptionCode
 import com.wq.auth.shared.utils.VerificationCodeGenerator.generateRandomCode
 import jakarta.mail.internet.InternetAddress
 import org.springframework.mail.javamail.JavaMailSender
