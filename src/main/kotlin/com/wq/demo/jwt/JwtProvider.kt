@@ -5,10 +5,8 @@ import com.wq.demo.jwt.error.JwtExceptionCode
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.MalformedJwtException
-import io.jsonwebtoken.PrematureJwtException
 import io.jsonwebtoken.UnsupportedJwtException
 import io.jsonwebtoken.io.Decoders
-import io.jsonwebtoken.io.DecodingException
 import io.jsonwebtoken.security.Keys
 import io.jsonwebtoken.security.SignatureException
 import org.springframework.stereotype.Component
@@ -45,16 +43,16 @@ class JwtProvider(
         val now = Instant.now()
         val exp = Date.from(now.plus(jwtProperties.accessExp))
 
-        val b = Jwts.builder()
+        val jwtBuilder = Jwts.builder()
             .subject(subject)
             .issuedAt(Date.from(now))
             .expiration(exp)
 
         // null 값은 claim에 포함하지 않음
         extraClaims.filterValues { it != null }
-            .forEach { (k, v) -> b.claim(k, v) }
+            .forEach { (key, value) -> jwtBuilder.claim(key, value) }
 
-        return b.signWith(key, Jwts.SIG.HS256).compact()
+        return jwtBuilder.signWith(key, Jwts.SIG.HS256).compact()
     }
 
     /**
@@ -101,12 +99,12 @@ class JwtProvider(
     fun validateOrThrow(token: String) {
         try {
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token)
-        } catch (t: Throwable) {
-            throw JwtException(mapToCode(t), t)
+        } catch (throwable: Throwable) {
+            throw JwtException(mapToCode(throwable), throwable)
         }
     }
 
-    private fun mapToCode(t: Throwable): JwtExceptionCode = when (t) {
+    private fun mapToCode(throwable: Throwable): JwtExceptionCode = when (throwable) {
         is SignatureException,
         is SecurityException                -> JwtExceptionCode.INVALID_SIGNATURE
         is MalformedJwtException            -> JwtExceptionCode.MALFORMED
