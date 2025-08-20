@@ -12,11 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("api/v1/auth/email")
 class AuthEmailController(
     private val authEmailService: AuthEmailService
 ) {
-    @PostMapping("/request")
+    @PostMapping("api/v1/auth/email/request")
     fun requestCode(@RequestBody req: EmailRequestDto): BaseResponse {
         return try {
             authEmailService.sendVerificationCode(req.email)
@@ -26,7 +25,7 @@ class AuthEmailController(
         }
     }
 
-    @PostMapping("/verify")
+    @PostMapping("api/v1/auth/email/verify")
     fun verifyCode(@RequestBody req: EmailVerifyRequestDto): BaseResponse {
         return try {
             authEmailService.verifyCode(req.email, req.code)

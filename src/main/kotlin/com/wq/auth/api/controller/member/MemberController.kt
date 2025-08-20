@@ -5,22 +5,21 @@ import com.wq.auth.api.domain.member.MemberService
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/members")
 class MemberController(private val memberService: MemberService) {
 
-    @GetMapping
+    @GetMapping("/members")
     fun getAll(): List<MemberEntity> = memberService.getAll()
 
-    @GetMapping("/{id}")
+    @GetMapping("/members/{id}")
     fun getById(@PathVariable id: Long): MemberEntity? = memberService.getById(id)
 
-    @PostMapping
+    @PostMapping("/members")
     fun create(@RequestBody member: MemberEntity): MemberEntity = memberService.create(member)
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/members/{id}")
     fun delete(@PathVariable id: Long) = memberService.delete(id)
 
-    @PutMapping("/{id}/nickname")
+    @PutMapping("/members/{id}/nickname")
     fun updateNickname(
         @PathVariable id: Long,
         @RequestBody payload: Map<String, String>
