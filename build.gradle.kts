@@ -34,7 +34,6 @@ dependencies {
 	implementation("me.paulschwarz:spring-dotenv:4.0.0")
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("com.h2database:h2")
-	annotationProcessor("org.projectlombok:lombok")
 	implementation("org.springframework.boot:spring-boot-starter-logging")
 
 	// test
@@ -76,9 +75,6 @@ allOpen {
 }
 
 tasks.withType<Test> {
-	useJUnitPlatform()
-}
-tasks.test {
 	useJUnitPlatform()
 }
 noArg {
