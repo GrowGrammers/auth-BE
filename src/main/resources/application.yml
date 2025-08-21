@@ -17,6 +17,14 @@ spring:
           starttls:
             enable: true
 
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: ${SWAGGER_PATH:/swagger-ui.html}
+
+
+
   datasource:
     url: ${DB_URL:jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
     driver-class-name: ${DB_DRIVER:org.h2.Driver}
