@@ -1,6 +1,6 @@
-package com.wq.demo.jwt.error
+package com.wq.auth.jwt.error
 
-import com.wq.demo.shared.error.ApiResponseCode
+import com.wq.auth.shared.error.ApiResponseCode
 
 
 /**

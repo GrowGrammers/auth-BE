@@ -1,7 +1,7 @@
-package com.wq.demo.jwt
+package com.wq.auth.jwt
 
-import com.wq.demo.jwt.error.JwtException
-import com.wq.demo.jwt.error.JwtExceptionCode
+import com.wq.auth.jwt.error.JwtException
+import com.wq.auth.jwt.error.JwtExceptionCode
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.MalformedJwtException
