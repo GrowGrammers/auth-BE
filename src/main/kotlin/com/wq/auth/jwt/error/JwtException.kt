@@ -1,6 +1,6 @@
-package com.wq.demo.jwt.error
+package com.wq.auth.jwt.error
 
-import com.wq.demo.shared.error.ApiException
+import com.wq.auth.shared.error.ApiException
 
 /**
  * JWT 예외를 도메인 표준 예외로 감싸서 던집니다.
