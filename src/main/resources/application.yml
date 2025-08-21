@@ -20,10 +20,10 @@ spring:
 springdoc:
   api-docs:
     enabled: true
+    default-produces-media-type: application/json
+    default-consumes-media-type: application/json
   swagger-ui:
-    path: ${SWAGGER_PATH:/swagger-ui.html}
-
-
+    path: ${SWAGGER_PATH}
 
   datasource:
     url: ${DB_URL:jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
