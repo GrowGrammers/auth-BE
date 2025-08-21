@@ -20,8 +20,6 @@ spring:
 springdoc:
   api-docs:
     enabled: true
-    default-produces-media-type: application/json
-    default-consumes-media-type: application/json
   swagger-ui:
     path: ${SWAGGER_PATH}
 
