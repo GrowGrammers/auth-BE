@@ -78,6 +78,9 @@ class JwtProvider(
             .expiration(exp)
             .signWith(key, Jwts.SIG.HS256)
             .compact()
+
+        println("완료")
+
     }
 
     /**
