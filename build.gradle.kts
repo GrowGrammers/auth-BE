@@ -40,6 +40,7 @@ dependencies {
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0")
 
 
 	// Kotest 버전 변수로 관리
