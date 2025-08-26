@@ -28,4 +28,12 @@ open class MemberEntity(
     @Column(name = "is_deleted", nullable = false)
     open var isDeleted: Boolean = false,
 
-    ) : BaseEntity()
+    ) : BaseEntity() {
+    companion object {
+        fun createEmailVerifiedMember(nickname: String) =
+            MemberEntity(
+                nickname = nickname,
+                isEmailVerified = true
+            )
+    }
+}
