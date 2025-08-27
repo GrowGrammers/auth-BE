@@ -60,24 +60,26 @@ class JwtProvider(
      *
      * @param subject 토큰 주체 (opaque: 랜덤 ulid)
      * @param jti 토큰 고유 식별자 (재발급/회전 시 검증용, 기본값: 랜덤 UUID)
-     * @return 생성된 JWT RefreshToken 문자열
+     * @return 생성된 JWT RefreshToken 문자열, jti
      *
      * DB에 jti를 저장해두고 재사용 방지 로직을 구현.
      */
     fun createRefreshToken(
         subject: String,
         jti: String = UUID.randomUUID().toString()
-    ): String {
+    ): Pair<String, String> { // Pair<token, jti>
         val now = Instant.now()
         val exp = Date.from(now.plus(jwtProperties.refreshExp))
 
-        return Jwts.builder()
+        val token = Jwts.builder()
             .subject(subject)
             .id(jti)                 // jti 클레임: RefreshToken 고유 식별자
             .issuedAt(Date.from(now))
             .expiration(exp)
             .signWith(key, Jwts.SIG.HS256)
             .compact()
+
+        return Pair(token, jti)
     }
 
     /**
