@@ -1,9 +1,9 @@
-package com.wq.demo.unit
+package com.wq.auth.unit
 
-import com.wq.demo.jwt.JwtProperties
-import com.wq.demo.jwt.JwtProvider
-import com.wq.demo.jwt.error.JwtException
-import com.wq.demo.jwt.error.JwtExceptionCode
+import com.wq.auth.jwt.JwtProperties
+import com.wq.auth.jwt.JwtProvider
+import com.wq.auth.jwt.error.JwtException
+import com.wq.auth.jwt.error.JwtExceptionCode
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.io.Encoders
@@ -70,14 +70,15 @@ class JwtProviderTest : StringSpec({
     }
 
     "RefreshToken을 발급하면 subject 파싱이 정상 동작한다" {
-        val rt = provider.createRefreshToken("user-123")
+        val (rt, jti) = provider.createRefreshToken("user-123")
         provider.getSubject(rt) shouldBe "user-123"
     }
 
     "RefreshToken에는 jti가 포함된다" {
-        val rt = provider.createRefreshToken("user-123")
+        val (rt, jti) = provider.createRefreshToken("user-123")
         val key: SecretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(props.secret))
         val claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(rt).payload
+        claims.id shouldBe jti
         (claims.id?.isNotBlank() ?: false).shouldBeTrue()
     }
 
