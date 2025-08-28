@@ -87,6 +87,17 @@ class MemberService(
         return LoginResponseDto.fromTokens(accessToken, refreshToken, accessTokenExpiredAt)
     }
 
+    @Transactional
+    fun logout(refreshToken: String) {
+        try {
+            val tokenMemberId = jwtProvider.getSubject(refreshToken).toLong()
+            val jti = jwtProvider.getJti(refreshToken)
+            refreshTokenRepository.deleteByMemberIdAndJti(tokenMemberId, jti)
+        } catch (ex: Exception) {
+            throw MemberException(MemberExceptionCode.LOGOUT_FAILED, ex)
+        }
+    }
+
     fun getAll(): List<MemberEntity> = memberRepository.findAll()
 
     fun getById(id: Long): MemberEntity? = memberRepository.findById(id).orElse(null)

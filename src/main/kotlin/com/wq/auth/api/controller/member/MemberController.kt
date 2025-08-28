@@ -1,6 +1,7 @@
 package com.wq.auth.api.controller.member
 
 import com.wq.auth.api.controller.member.request.EmailLoginRequestDto
+import com.wq.auth.api.controller.member.request.LogoutRequestDto
 import com.wq.auth.api.domain.email.AuthEmailService
 import com.wq.auth.api.domain.email.error.EmailException
 import com.wq.auth.api.domain.member.entity.MemberEntity
@@ -33,6 +34,16 @@ class MemberController(
                 else -> null
             }
             Responses.fail(code ?: CommonExceptionCode.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    @PostMapping("api/v1/auth/members/logout")
+    override fun logout(@RequestBody req: LogoutRequestDto): BaseResponse {
+        return try {
+            memberService.logout(req.refreshToken)
+            Responses.success(message = "로그아웃에 성공했습니다.", data = null)
+        } catch (e: MemberException) {
+            Responses.fail(e.memberCode)
         }
     }
 
