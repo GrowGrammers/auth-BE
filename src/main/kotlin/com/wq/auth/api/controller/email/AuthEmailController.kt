@@ -25,7 +25,7 @@ class AuthEmailController(
     @PostMapping("api/v1/auth/email/verify")
     override fun verifyCode(@RequestBody req: EmailVerifyRequestDto): BaseResponse {
         return try {
-            authEmailService.verifyCode(req.email, req.code)
+            authEmailService.verifyCode(req.email, req.verifyCode)
             Responses.success(message = "인증되었습니다.", data = null)
         } catch (e: EmailException) {
             Responses.fail(e.emailCode)

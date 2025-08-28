@@ -1,3 +1,3 @@
 package com.wq.auth.api.controller.email.request
 
-data class EmailVerifyRequestDto (val email: String, val code: String)
+data class EmailVerifyRequestDto (val email: String, val verifyCode: String)

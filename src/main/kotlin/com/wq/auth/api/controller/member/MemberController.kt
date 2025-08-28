@@ -22,7 +22,7 @@ class MemberController(
     @PostMapping("api/v1/auth/members/email-login")
     override fun emailLogin(@RequestBody req: EmailLoginRequestDto): BaseResponse {
         return try {
-            emailService.verifyCode(req.email, req.code)
+            emailService.verifyCode(req.email, req.verifyCode)
             val resp = memberService.emailLogin(req.email)
             Responses.success(message = "로그인에 성공했습니다.", data = resp)
         } catch (e: ApiException) {
