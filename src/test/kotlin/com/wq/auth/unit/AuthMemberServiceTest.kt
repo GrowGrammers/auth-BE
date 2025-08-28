@@ -337,4 +337,44 @@ class AuthMemberServiceTest : DescribeSpec({
             exception.cause shouldBe dbException
         }
     }
+
+    describe("로그아웃 테스트") {
+
+        it("성공 - refreshToken 삭제 호출") {
+            // given
+            val refreshToken = "dummyToken"
+            val memberId = 1L
+            val jti = "jti123"
+
+            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
+            whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
+
+            // when
+            memberService.logout(refreshToken)
+
+            // then
+            verify(refreshTokenRepository, times(1)).deleteByMemberIdAndJti(memberId, jti)
+        }
+
+        it("실패 - DB 삭제 예외 발생 시 MemberException 던짐") {
+            // given
+            val refreshToken = "dummyToken"
+            val memberId = 1L
+            val jti = "jti123"
+
+            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
+            whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
+            whenever(refreshTokenRepository.deleteByMemberIdAndJti(memberId, jti))
+                .thenThrow(RuntimeException("DB error"))
+
+            // when
+            val ex = shouldThrow<MemberException> {
+                memberService.logout(refreshToken)
+            }
+
+            // then
+            ex.code shouldBe MemberExceptionCode.LOGOUT_FAILED
+            verify(refreshTokenRepository, times(1)).deleteByMemberIdAndJti(memberId, jti)
+        }
+    }
 })
