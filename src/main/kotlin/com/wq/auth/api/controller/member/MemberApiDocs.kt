@@ -1,6 +1,7 @@
 package com.wq.auth.api.controller.member
 
 import com.wq.auth.api.controller.member.request.EmailLoginRequestDto
+import com.wq.auth.api.controller.member.request.LogoutRequestDto
 import com.wq.auth.web.common.response.BaseResponse
 import com.wq.auth.web.common.response.FailResponse
 import com.wq.auth.web.common.response.SuccessResponse
@@ -40,4 +41,26 @@ interface MemberApiDocs {
         ]
     )
     fun emailLogin(@RequestBody req: EmailLoginRequestDto): BaseResponse
+
+
+    @Operation(
+        summary = "로그아웃",
+        description = "RefreshToken을 DB에서 삭제하여 로그아웃합니다."
+    )
+
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "로그아웃 성공",
+                content = [Content(schema = Schema(implementation = SuccessResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "로그아웃에 실패했습니다.",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            )
+        ]
+    )
+    fun logout(@RequestBody req: LogoutRequestDto): BaseResponse
 }
