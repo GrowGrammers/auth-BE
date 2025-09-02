@@ -1,9 +1,9 @@
 package com.wq.auth.unit
 
-import com.wq.auth.jwt.JwtProperties
-import com.wq.auth.jwt.JwtProvider
-import com.wq.auth.jwt.error.JwtException
-import com.wq.auth.jwt.error.JwtExceptionCode
+import com.wq.auth.shared.jwt.JwtProperties
+import com.wq.auth.shared.jwt.JwtProvider
+import com.wq.auth.shared.jwt.error.JwtException
+import com.wq.auth.shared.jwt.error.JwtExceptionCode
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.io.Encoders
@@ -29,23 +29,21 @@ class JwtProviderTest : StringSpec({
     )
     val provider = JwtProvider(props)
 
-    "AccessToken을 발급하면 subject 파싱이 정상 동작한다" {
-        val token = provider.createAccessToken(
-            subject = "user-123",
-            extraClaims = mapOf("role" to "USER")
-        )
-        provider.getSubject(token) shouldBe "user-123"
+    "간소화된 AccessToken을 발급하면 opaqueId 파싱이 정상 동작한다" {
+        val opaqueId = "550e8400-e29b-41d4-a716-446655440000"
+        val token = provider.createAccessToken(opaqueId, "MEMBER")
+        provider.getOpaqueId(token) shouldBe opaqueId
+        provider.getRole(token) shouldBe "MEMBER"
     }
 
-    "AccessToken에 넣은 커스텀 claim(role)이 실제로 들어간다" {
-        val token = provider.createAccessToken(
-            subject = "user-123",
-            extraClaims = mapOf("role" to "USER")
-        )
+    "간소화된 AccessToken에 role claim이 실제로 들어간다" {
+        val opaqueId = "550e8400-e29b-41d4-a716-446655440000"
+        val token = provider.createAccessToken(opaqueId, "ADMIN")
+        
         val key: SecretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(props.secret))
         val claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload
-        claims["role"] shouldBe "USER"
-        claims.subject shouldBe "user-123"
+        claims["role"] shouldBe "ADMIN"
+        claims.subject shouldBe opaqueId
     }
 
     "위조된 토큰은 JwtException(INVALID_SIGNATURE)을 던진다" {
@@ -54,7 +52,7 @@ class JwtProviderTest : StringSpec({
         val providerWithAnotherKey = JwtProvider(
             JwtProperties(secret = keyB, accessExp = Duration.ofMinutes(5), refreshExp = Duration.ofDays(14))
         )
-        val tokenSignedByB = providerWithAnotherKey.createAccessToken("user-123")
+        val tokenSignedByB = providerWithAnotherKey.createAccessToken("550e8400-e29b-41d4-a716-446655440000", "MEMBER")
 
         val ex = shouldThrow<JwtException> {
             provider.validateOrThrow(tokenSignedByB)
@@ -63,22 +61,23 @@ class JwtProviderTest : StringSpec({
     }
 
     "만료된 토큰은 JwtException(EXPIRED)을 던진다" {
-        val token = provider.createAccessToken("user-123")
+        val token = provider.createAccessToken("550e8400-e29b-41d4-a716-446655440000", "MEMBER")
         Thread.sleep(1_200) // accessExp=1s 대기
         val ex = shouldThrow<JwtException> { provider.validateOrThrow(token) }
         ex.jwtCode shouldBe JwtExceptionCode.EXPIRED
     }
 
-    "RefreshToken을 발급하면 subject 파싱이 정상 동작한다" {
-        val (rt, jti) = provider.createRefreshToken("user-123")
-        provider.getSubject(rt) shouldBe "user-123"
+    "RefreshToken을 발급하면 opaqueId 파싱이 정상 동작한다" {
+        val opaqueId = "550e8400-e29b-41d4-a716-446655440000"
+        val rt = provider.createRefreshToken(opaqueId)
+        provider.getOpaqueId(rt) shouldBe opaqueId
     }
 
     "RefreshToken에는 jti가 포함된다" {
-        val (rt, jti) = provider.createRefreshToken("user-123")
+        val opaqueId = "550e8400-e29b-41d4-a716-446655440000"
+        val rt = provider.createRefreshToken(opaqueId)
         val key: SecretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(props.secret))
         val claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(rt).payload
-        claims.id shouldBe jti
         (claims.id?.isNotBlank() ?: false).shouldBeTrue()
     }
 
