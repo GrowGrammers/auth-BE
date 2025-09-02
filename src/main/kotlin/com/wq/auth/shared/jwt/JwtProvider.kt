@@ -1,5 +1,6 @@
 package com.wq.auth.shared.jwt
 
+import com.wq.auth.api.domain.member.entity.Role
 import com.wq.auth.shared.jwt.error.JwtException
 import com.wq.auth.shared.jwt.error.JwtExceptionCode
 import io.jsonwebtoken.ExpiredJwtException
@@ -37,7 +38,7 @@ class JwtProvider(
      */
     fun createAccessToken(
         opaqueId: String,
-        role: String
+        role: Role
     ): String {
         val now = Instant.now()
         val exp = Date.from(now.plus(jwtProperties.accessExp))
@@ -46,7 +47,7 @@ class JwtProvider(
             .subject(opaqueId)
             .issuedAt(Date.from(now))
             .expiration(exp)
-            .claim("role", role)
+            .claim("role", role.toString())
             .signWith(key, Jwts.SIG.HS256)
             .compact()
     }
@@ -93,11 +94,14 @@ class JwtProvider(
      * @param token 대상 JWT 토큰
      * @return 사용자의 역할 (MEMBER, ADMIN 등)
      */
-    fun getRole(token: String): String? =
-        Jwts.parser().verifyWith(key)
+    fun getRole(token: String): Role? {
+        val roleString = Jwts.parser().verifyWith(key)
             .build().parseSignedClaims(token)
             .payload
             .get("role", String::class.java)
+        
+        return roleString?.let { Role.valueOf(it) }
+    }
 
     /**
      * JWT 토큰에서 모든 클레임을 추출합니다.

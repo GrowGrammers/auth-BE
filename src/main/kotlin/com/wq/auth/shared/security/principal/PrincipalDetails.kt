@@ -1,5 +1,6 @@
 package com.wq.auth.shared.security.principal
 
+import com.wq.auth.api.domain.member.entity.Role
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
@@ -11,11 +12,11 @@ import org.springframework.security.core.userdetails.UserDetails
  * 
  * 간소화된 구조:
  * - opaqueId: 사용자 식별을 위한 UUID
- * - role: 사용자 역할 (MEMBER, ADMIN)
+ * - role: 사용자 역할 (Role enum: MEMBER, ADMIN)
  */
 data class PrincipalDetails(
     val opaqueId: String,   // 사용자 UUID
-    val role: String        // 사용자 역할
+    val role: Role          // 사용자 역할
 ) : UserDetails {
 
     /**
@@ -23,7 +24,8 @@ data class PrincipalDetails(
      * role을 ROLE_ prefix와 함께 GrantedAuthority로 변환합니다.
      */
     override fun getAuthorities(): Collection<GrantedAuthority> {
-        val roleWithPrefix = if (role.startsWith("ROLE_")) role else "ROLE_$role"
+        val roleString = role.name
+        val roleWithPrefix = if (roleString.startsWith("ROLE_")) roleString else "ROLE_$roleString"
         return listOf(SimpleGrantedAuthority(roleWithPrefix))
     }
 
