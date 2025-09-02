@@ -1,5 +1,6 @@
 package com.wq.auth.shared.security
 
+import com.wq.auth.api.domain.member.entity.Role
 import com.wq.auth.shared.jwt.JwtProvider
 import com.wq.auth.shared.jwt.error.JwtException
 import com.wq.auth.shared.security.principal.PrincipalDetails
@@ -92,7 +93,7 @@ class JwtAuthenticationFilter(
      */
     private fun extractPrincipalDetails(token: String): PrincipalDetails {
         val opaqueId = jwtProvider.getOpaqueId(token)
-        val role = jwtProvider.getRole(token) ?: "MEMBER"
+        val role = jwtProvider.getRole(token) ?: Role.MEMBER
         
         return PrincipalDetails(opaqueId, role)
     }

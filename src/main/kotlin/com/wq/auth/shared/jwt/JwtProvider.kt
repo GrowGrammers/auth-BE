@@ -1,5 +1,6 @@
 package com.wq.auth.shared.jwt
 
+import com.wq.auth.api.domain.member.entity.Role
 import com.wq.auth.shared.jwt.error.JwtException
 import com.wq.auth.shared.jwt.error.JwtExceptionCode
 import io.jsonwebtoken.ExpiredJwtException
@@ -24,6 +25,22 @@ class JwtProvider(
 
     fun createAccessToken(
         opaqueId: String,
+        role: Role
+    ): String {
+        val now = Instant.now()
+        val exp = Date.from(now.plus(jwtProperties.accessExp))
+
+        return Jwts.builder()
+            .subject(opaqueId)
+            .issuedAt(Date.from(now))
+            .expiration(exp)
+            .claim("role", role.toString())
+            .signWith(key, Jwts.SIG.HS256)
+            .compact()
+    }
+
+    fun createAccessToken(
+        opaqueId: String,
         role: String
     ): String {
         val now = Instant.now()
@@ -33,7 +50,7 @@ class JwtProvider(
             .subject(opaqueId)
             .issuedAt(Date.from(now))
             .expiration(exp)
-            .claim("role", role)
+            .claim("role", role.toString())
             .signWith(key, Jwts.SIG.HS256)
             .compact()
     }
@@ -83,6 +100,15 @@ class JwtProvider(
             .build().parseSignedClaims(token)
             .payload
             .get("role", String::class.java)
+
+    fun getRole(token: String): Role? {
+        val roleString = Jwts.parser().verifyWith(key)
+            .build().parseSignedClaims(token)
+            .payload
+            .get("role", String::class.java)
+
+        return roleString?.let { Role.valueOf(it) }
+    }
 
     fun getSubject(token: String): String =
         Jwts.parser().verifyWith(key)                   // 서명 검증에 사용할 키 설정

@@ -1,5 +1,6 @@
 package com.wq.auth.api.controller
 
+import com.wq.auth.api.domain.member.entity.Role
 import com.wq.auth.shared.jwt.JwtProvider
 import com.wq.auth.shared.security.annotation.AdminApi
 import com.wq.auth.shared.security.annotation.AuthenticatedApi
@@ -40,13 +41,14 @@ class TestSecurityController(
     @GetMapping("/api/public/token")
     fun generateTestToken(
         @RequestParam(defaultValue = "550e8400-e29b-41d4-a716-446655440000") opaqueId: String,
-        @RequestParam(defaultValue = "MEMBER") role: String
+        @RequestParam(defaultValue = "MEMBER") roleString: String
     ): Map<String, String> {
+        val role = Role.valueOf(roleString)
         val token = jwtProvider.createAccessToken(opaqueId, role)
         return mapOf(
             "token" to token,
             "opaqueId" to opaqueId,
-            "role" to role,
+            "role" to role.name,
             "usage" to "Authorization: Bearer $token"
         )
     }
