@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT 인증 테스트</title>
+    <link rel="stylesheet" href="test-auth.css">
+</head>
+<body>
+<div class="container">
+    <h1>JWT 인증 시스템 테스트</h1>
+
+    <!-- 토큰 발급 섹션 -->
+    <div class="section">
+        <h2>1. JWT 토큰 발급</h2>
+        <div>
+            <label>사용자 ID:</label>
+            <input type="text" id="opaqueId" value="550e8400-e29b-41d4-a716-446655440000" placeholder="사용자 ID 입력">
+        </div>
+        <div class="button-group">
+            <button class="token-btn" onclick="generateToken('MEMBER')">MEMBER 토큰 발급</button>
+            <button class="token-btn" onclick="generateToken('ADMIN')">ADMIN 토큰 발급</button>
+            <button class="clear-btn" onclick="clearToken()">토큰 초기화</button>
+        </div>
+        <div id="tokenDisplay" class="token-display" style="display: none;">
+            <strong>발급된 토큰:</strong><br>
+            <span id="tokenValue"></span>
+        </div>
+        <div class="info">
+            토큰은 5분간 유효하며, Authorization 헤더에 'Bearer {token}' 형식으로 사용됩니다.
+        </div>
+    </div>
+
+    <!-- API 테스트 섹션 -->
+    <div class="section">
+        <h2>2. API 엔드포인트 테스트</h2>
+        <div class="button-group">
+            <button class="api-btn" onclick="testApi('/api/public/test', false)">Public API (인증 불필요)</button>
+            <button class="api-btn" onclick="testApi('/api/test', true)" id="authBtn">Authenticated API (로그인 필요)</button>
+            <button class="api-btn" onclick="testApi('/api/admin/test', true)" id="adminBtn">Admin API (관리자 권한)</button>
+        </div>
+        <div class="info">
+            토큰 없이도 버튼을 클릭하여 401/403 에러를 확인할 수 있습니다.
+        </div>
+        <div class="button-group">
+            <button class="clear-btn" onclick="clearResults()">결과 초기화</button>
+        </div>
+        <div id="apiResults" class="result"></div>
+    </div>
+
+    <!-- 현재 토큰 정보 -->
+    <div class="section">
+        <h2>3. 현재 토큰 정보</h2>
+        <div id="tokenInfo" class="result">토큰이 발급되지 않았습니다.</div>
+    </div>
+</div>
+
+<script>
+    let currentToken = null;
+    let currentRole = null;
+
+    // 토큰 발급
+    async function generateToken(role) {
+        const opaqueId = document.getElementById('opaqueId').value;
+
+        try {
+            const response = await fetch(`/api/public/token?opaqueId=${encodeURIComponent(opaqueId)}&roleString=${role}`, {
+                method: 'GET'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const responseData = await response.json();
+            console.log('토큰 발급 응답:', responseData); // 디버깅용
+
+            if (responseData.success && responseData.data) {
+                // 토큰 정보 저장
+                currentToken = responseData.data.token;
+                currentRole = responseData.data.role;
+
+                // 토큰 표시
+                const tokenValueElement = document.getElementById('tokenValue');
+                const tokenDisplayElement = document.getElementById('tokenDisplay');
+
+                tokenValueElement.textContent = responseData.data.token;
+                tokenDisplayElement.style.display = 'block';
+
+                // 토큰 정보 표시
+                updateTokenInfo(responseData.data);
+
+                // API 버튼 스타일 업데이트
+                updateApiButtons();
+
+                addResult(`✅ ${responseData.message}\n${JSON.stringify(responseData, null, 2)}`, 'success');
+            } else {
+                addResult(`❌ 토큰 발급 실패: ${responseData.message || '알 수 없는 오류'}\n${JSON.stringify(responseData, null, 2)}`, 'error');
+            }
+
+        } catch (error) {
+            addResult(`❌ 토큰 발급 실패: ${error.message}`, 'error');
+        }
+    }
+
+    // API 테스트
+    async function testApi(endpoint, requiresAuth) {
+        try {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            // 토큰이 있으면 항상 헤더에 포함 (에러 테스트를 위해 토큰 없이도 호출 가능)
+            if (currentToken) {
+                headers['Authorization'] = `Bearer ${currentToken}`;
+            }
+
+            const response = await fetch(endpoint, {
+                method: 'GET',
+                headers: headers
+            });
+
+            const responseText = await response.text();
+            let responseData;
+
+            try {
+                responseData = JSON.parse(responseText);
+            } catch {
+                responseData = responseText;
+            }
+
+            if (response.ok) {
+                // 성공 응답 (SuccessResponse 형식)
+                addResult(`✅ ${endpoint} 호출 성공 (${response.status})\n${JSON.stringify(responseData, null, 2)}`, 'success');
+            } else {
+                // 실패 응답 (FailResponse 형식 - GlobalExceptionHandler에서 처리)
+                addResult(`❌ ${endpoint} 호출 실패 (${response.status})\n${JSON.stringify(responseData, null, 2)}`, 'error');
+            }
+
+        } catch (error) {
+            addResult(`❌ ${endpoint} 호출 중 오류: ${error.message}`, 'error');
+        }
+    }
+
+    // 결과 표시
+    function addResult(message, type) {
+        const results = document.getElementById('apiResults');
+        const timestamp = new Date().toLocaleTimeString();
+        results.textContent += `[${timestamp}] ${message}\n\n`;
+        results.className = `result ${type}`;
+        results.scrollTop = results.scrollHeight;
+    }
+
+    // 토큰 정보 업데이트
+    function updateTokenInfo(tokenData) {
+        const info = document.getElementById('tokenInfo');
+        info.textContent = `사용자 ID: ${tokenData.opaqueId}\n역할: ${tokenData.role}\n사용법: ${tokenData.usage}`;
+        info.className = 'result success';
+    }
+
+    // API 버튼 상태 업데이트 (시각적 표시만)
+    function updateApiButtons() {
+        const authBtn = document.getElementById('authBtn');
+        const adminBtn = document.getElementById('adminBtn');
+
+        if (currentToken) {
+            authBtn.classList.remove('no-token');
+            adminBtn.classList.remove('no-token');
+        } else {
+            authBtn.classList.add('no-token');
+            adminBtn.classList.add('no-token');
+        }
+    }
+
+    // 토큰 초기화
+    function clearToken() {
+        currentToken = null;
+        currentRole = null;
+        document.getElementById('tokenDisplay').style.display = 'none';
+        document.getElementById('tokenInfo').textContent = '토큰이 발급되지 않았습니다.';
+        document.getElementById('tokenInfo').className = 'result';
+        updateApiButtons();
+        addResult('🧹 토큰이 초기화되었습니다.', 'info');
+    }
+
+    // 결과 초기화
+    function clearResults() {
+        document.getElementById('apiResults').textContent = '';
+        document.getElementById('apiResults').className = 'result';
+    }
+
+    // 페이지 로드 시 초기화
+    window.onload = function() {
+        updateApiButtons();
+    };
+</script>
+</body>
+</html>
