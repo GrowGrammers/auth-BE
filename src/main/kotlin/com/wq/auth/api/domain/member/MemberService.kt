@@ -12,10 +12,6 @@ import com.wq.auth.jwt.JwtProvider
 import com.wq.auth.jwt.error.JwtException
 import com.wq.auth.jwt.error.JwtExceptionCode
 import com.wq.auth.shared.utils.NicknameGenerator
-import io.jsonwebtoken.ExpiredJwtException
-import io.jsonwebtoken.MalformedJwtException
-import io.jsonwebtoken.UnsupportedJwtException
-import io.jsonwebtoken.security.SignatureException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
