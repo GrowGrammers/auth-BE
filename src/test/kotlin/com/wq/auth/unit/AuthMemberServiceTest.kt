@@ -10,7 +10,7 @@ import com.wq.auth.jwt.JwtProvider
 import com.wq.auth.api.domain.member.AuthProviderRepository
 import com.wq.auth.api.domain.member.MemberRepository
 import com.wq.auth.api.domain.member.RefreshTokenRepository
-import com.wq.auth.api.domain.member.entity.refreshTokenEntity
+import com.wq.auth.api.domain.member.entity.RefreshTokenEntity
 import com.wq.auth.api.domain.member.error.MemberException
 import com.wq.auth.api.domain.member.error.MemberExceptionCode
 import com.wq.auth.shared.utils.NicknameGenerator
@@ -78,7 +78,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair(refreshToken, jti))
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMillis(expiredTime))
             whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
-            whenever(refreshTokenRepository.save(any<refreshTokenEntity>())).thenReturn(mock())
+            whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
 
             // when
             val result = memberService.emailLogin(email)
@@ -91,7 +91,7 @@ class AuthMemberServiceTest : DescribeSpec({
             verify(authProviderRepository).findByEmail(email)
             verify(jwtProvider).createAccessToken(any(), any())
             verify(jwtProvider).createRefreshToken(any(), any())
-            verify(refreshTokenRepository).save(any<refreshTokenEntity>())
+            verify(refreshTokenRepository).save(any<RefreshTokenEntity>())
             verifyNoInteractions(authEmailService)
         }
 
@@ -101,7 +101,7 @@ class AuthMemberServiceTest : DescribeSpec({
             val memberId = 1L
             val mockMember = mock<MemberEntity>()
             val mockAuthProvider = mock<AuthProviderEntity>()
-            val existingRefreshToken = mock<refreshTokenEntity>()
+            val existingRefreshToken = mock<RefreshTokenEntity>()
 
             whenever(mockMember.id).thenReturn(memberId)
             whenever(mockAuthProvider.member).thenReturn(mockMember)
@@ -119,7 +119,7 @@ class AuthMemberServiceTest : DescribeSpec({
 
             // then
             verify(refreshTokenRepository).delete(existingRefreshToken)
-            verify(refreshTokenRepository).save(any<refreshTokenEntity>())
+            verify(refreshTokenRepository).save(any<RefreshTokenEntity>())
         }
 
         it("존재하지 않는 이메일로 로그인하면 회원가입을 진행한다") {
@@ -262,7 +262,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair("refresh", "jti"))
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMinutes(30))
             whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
-            whenever(refreshTokenRepository.save(any<refreshTokenEntity>())).thenReturn(mock())
+            whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
 
             // when
             memberService.signUp(email)
