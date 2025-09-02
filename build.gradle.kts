@@ -37,6 +37,7 @@ dependencies {
 	implementation("me.paulschwarz:spring-dotenv:4.0.0")
 	runtimeOnly("com.h2database:h2")
 	implementation("org.springframework.boot:spring-boot-starter-logging")
+	implementation("io.github.oshai:kotlin-logging-jvm:5.1.4")
 
 	// test
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
