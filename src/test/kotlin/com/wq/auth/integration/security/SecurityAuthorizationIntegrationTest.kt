@@ -51,7 +51,7 @@ class JwtSpringSecurityIntegrationTest(
                 )
 
                 val result = mockMvc.perform(
-                    get("/api/authenticated/test")
+                    get("/api/test")
                         .header("Authorization", "Bearer $memberToken")
                         .contentType(MediaType.APPLICATION_JSON)
                 ).andReturn()
@@ -69,7 +69,7 @@ class JwtSpringSecurityIntegrationTest(
                 )
 
                 val result = mockMvc.perform(
-                    get("/api/authenticated/test")
+                    get("/api/test")
                         .header("Authorization", "Bearer $adminToken")
                         .contentType(MediaType.APPLICATION_JSON)
                 ).andReturn()

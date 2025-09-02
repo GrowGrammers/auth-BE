@@ -1,0 +1,146 @@
+/* JWT 인증 테스트 페이지 스타일 */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.container {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.section {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fafafa;
+}
+
+.section h2 {
+    color: #555;
+    margin-top: 0;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.token-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.token-btn:hover {
+    background-color: #218838;
+}
+
+.api-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.api-btn:hover {
+    background-color: #0056b3;
+}
+
+.api-btn.no-token {
+    background-color: #6c757d;
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.api-btn.no-token:hover {
+    background-color: #5a6268;
+    opacity: 1;
+}
+
+.clear-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.clear-btn:hover {
+    background-color: #c82333;
+}
+
+.token-display {
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 10px 0;
+    word-break: break-all;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.result {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 10px 0;
+    white-space: pre-wrap;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.success {
+    border-color: #28a745;
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.error {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.info {
+    color: #666;
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+input[type="text"] {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    margin: 0 10px;
+    width: 200px;
+}
+
+label {
+    font-weight: 500;
+    color: #555;
+}
