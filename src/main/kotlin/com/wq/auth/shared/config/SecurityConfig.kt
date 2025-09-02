@@ -48,17 +48,11 @@ class SecurityConfig(
                 auth
                     // 공개 엔드포인트 (인증 불필요)
                     .requestMatchers(
-                        "/api/auth/**",           // 인증 관련 API
                         "/api/public/**",         // 공개 API
-                        "/api/test/public",       // 공개 테스트 API
-                        "/h2-console/**",         // H2 데이터베이스 콘솔
-                        "/swagger-ui/**",         // Swagger UI
-                        "/v3/api-docs/**",        // OpenAPI 문서
-                        "/actuator/health",       // 헬스체크
-                        "/public/**"              // 공개 API 테스트용
+                        "/actuator/health"        // 헬스체크
                     ).permitAll()
                     
-                    // 나머지 모든 요청은 인증 필요
+                    // 나머지 모든 요청은 인증 필요 (세부 권한은 @PreAuthorize로 처리)
                     .anyRequest().authenticated()
             }
             
