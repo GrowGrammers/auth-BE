@@ -1,4 +1,4 @@
-package com.wq.auth.jwt.error
+package com.wq.auth.shared.jwt.error
 
 import com.wq.auth.shared.error.ApiResponseCode
 
