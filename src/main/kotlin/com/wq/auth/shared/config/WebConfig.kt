@@ -4,6 +4,10 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
+/**
+ * 웹 관련 설정
+ * - CORS 설정: 브라우저에서 API 호출 허용
+ */
 @Configuration
 class WebConfig : WebMvcConfigurer {
     
