@@ -15,5 +15,6 @@ enum class JwtExceptionCode (
     INVALID_SIGNATURE(401, "유효하지 않은 JWT 서명입니다."),
     MALFORMED(401, "유효하지 않은 JWT 토큰입니다."),
     EXPIRED(401, "만료된 JWT 토큰입니다."),
-    UNSUPPORTED(401, "지원되지 않는 JWT 토큰입니다.");
+    UNSUPPORTED(401, "지원되지 않는 JWT 토큰입니다."),
+    FORBIDDEN(403, "해당 리소스에 접근할 권한이 없습니다.");
 }
