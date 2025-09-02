@@ -85,16 +85,10 @@ class JwtAuthenticationFilter(
         }
     }
 
-    /**
-     * JWT 토큰에서 PrincipalDetails 객체를 생성합니다.
-     * 
-     * @param token JWT 토큰
-     * @return PrincipalDetails 객체
-     */
     private fun extractPrincipalDetails(token: String): PrincipalDetails {
         val opaqueId = jwtProvider.getOpaqueId(token)
         val role = jwtProvider.getRole(token) ?: Role.MEMBER
-        
+
         return PrincipalDetails(opaqueId, role)
     }
 }
