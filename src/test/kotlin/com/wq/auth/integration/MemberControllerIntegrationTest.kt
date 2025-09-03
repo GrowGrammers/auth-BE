@@ -34,12 +34,6 @@ class MemberControllerIntegrationTest : DescribeSpec() {
     @MockitoBean
     lateinit var memberService: MemberService
 
-    @MockitoBean
-    lateinit var emailService: AuthEmailService
-
-    @MockitoBean
-    lateinit var jwtProperties: JwtProperties
-
     init {
         describe("POST /api/v1/auth/members/refresh") {
 
