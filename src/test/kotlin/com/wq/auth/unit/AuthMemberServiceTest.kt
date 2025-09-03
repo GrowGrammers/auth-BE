@@ -10,9 +10,11 @@ import com.wq.auth.jwt.JwtProvider
 import com.wq.auth.api.domain.member.AuthProviderRepository
 import com.wq.auth.api.domain.member.MemberRepository
 import com.wq.auth.api.domain.member.RefreshTokenRepository
-import com.wq.auth.api.domain.member.entity.refreshTokenEntity
+import com.wq.auth.api.domain.member.entity.RefreshTokenEntity
 import com.wq.auth.api.domain.member.error.MemberException
 import com.wq.auth.api.domain.member.error.MemberExceptionCode
+import com.wq.auth.jwt.error.JwtException
+import com.wq.auth.jwt.error.JwtExceptionCode
 import com.wq.auth.shared.utils.NicknameGenerator
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
@@ -21,6 +23,8 @@ import io.kotest.matchers.shouldNotBe
 import org.mockito.kotlin.*
 import org.springframework.test.context.ActiveProfiles
 import java.time.Duration
+import java.time.Instant
+import java.util.Optional
 
 @ActiveProfiles("test")
 class AuthMemberServiceTest : DescribeSpec({
@@ -78,8 +82,8 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair(refreshToken, jti))
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMillis(expiredTime))
             whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
-            whenever(refreshTokenRepository.save(any<refreshTokenEntity>())).thenReturn(mock())
-
+            whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
+            
             // when
             val result = memberService.emailLogin(email)
 
@@ -91,7 +95,7 @@ class AuthMemberServiceTest : DescribeSpec({
             verify(authProviderRepository).findByEmail(email)
             verify(jwtProvider).createAccessToken(any(), any())
             verify(jwtProvider).createRefreshToken(any(), any())
-            verify(refreshTokenRepository).save(any<refreshTokenEntity>())
+            verify(refreshTokenRepository).save(any<RefreshTokenEntity>())
             verifyNoInteractions(authEmailService)
         }
 
@@ -101,7 +105,7 @@ class AuthMemberServiceTest : DescribeSpec({
             val memberId = 1L
             val mockMember = mock<MemberEntity>()
             val mockAuthProvider = mock<AuthProviderEntity>()
-            val existingRefreshToken = mock<refreshTokenEntity>()
+            val existingRefreshToken = mock<RefreshTokenEntity>()
 
             whenever(mockMember.id).thenReturn(memberId)
             whenever(mockAuthProvider.member).thenReturn(mockMember)
@@ -119,7 +123,7 @@ class AuthMemberServiceTest : DescribeSpec({
 
             // then
             verify(refreshTokenRepository).delete(existingRefreshToken)
-            verify(refreshTokenRepository).save(any<refreshTokenEntity>())
+            verify(refreshTokenRepository).save(any<RefreshTokenEntity>())
         }
 
         it("존재하지 않는 이메일로 로그인하면 회원가입을 진행한다") {
@@ -262,8 +266,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair("refresh", "jti"))
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMinutes(30))
             whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
-            whenever(refreshTokenRepository.save(any<refreshTokenEntity>())).thenReturn(mock())
-
+            whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
             // when
             memberService.signUp(email)
 
@@ -335,6 +338,178 @@ class AuthMemberServiceTest : DescribeSpec({
 
             exception.code shouldBe MemberExceptionCode.DATABASE_SAVE_FAILED
             exception.cause shouldBe dbException
+        }
+    }
+
+    describe("로그아웃 테스트") {
+
+        it("성공 - refreshToken 삭제 호출") {
+            // given
+            val refreshToken = "dummyToken"
+            val memberId = 1L
+            val jti = "jti123"
+
+            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
+            whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
+
+            // when
+            memberService.logout(refreshToken)
+
+            // then
+            verify(refreshTokenRepository, times(1)).deleteByMemberIdAndJti(memberId, jti)
+        }
+
+        it("실패 - DB 삭제 예외 발생 시 MemberException 던짐") {
+            // given
+            val refreshToken = "dummyToken"
+            val memberId = 1L
+            val jti = "jti123"
+
+            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
+            whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
+            whenever(refreshTokenRepository.deleteByMemberIdAndJti(memberId, jti))
+                .thenThrow(RuntimeException("DB error"))
+
+            // when
+            val ex = shouldThrow<MemberException> {
+                memberService.logout(refreshToken)
+            }
+
+            // then
+            ex.code shouldBe MemberExceptionCode.LOGOUT_FAILED
+            verify(refreshTokenRepository, times(1)).deleteByMemberIdAndJti(memberId, jti)
+        }
+    }
+
+    describe("AccessToken 재발급") {
+        it("유효한 refreshToken이 주어졌을 때 새로운 토큰들을 생성하고 반환해야 한다") {
+            // given
+            val refreshToken = "valid-refresh-token"
+            val jti = "test-jti"
+            val memberId = 1L
+            val member = mock<MemberEntity>()
+
+            val futureTime = Instant.now().plusSeconds(3600)
+            val refreshTokenEntity = mock<RefreshTokenEntity>()
+            whenever(refreshTokenEntity.expiredAt).thenReturn(futureTime)
+
+            val newAccessToken = "new-access-token"
+            val newRefreshToken = "new-refresh-token"
+            val newJti = "new-jti"
+            val accessExp = Duration.ofMinutes(30)
+            val refreshExp = Duration.ofDays(7)
+
+            // mocking
+            doNothing().`when`(jwtProvider).validateOrThrow(refreshToken)
+            whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
+            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
+            whenever(refreshTokenRepository.findByMemberIdAndJti(memberId, jti)).thenReturn(refreshTokenEntity)
+            whenever(jwtProvider.createAccessToken(any(), any())).thenReturn(newAccessToken)
+            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair(newRefreshToken, newJti))
+            whenever(jwtProperties.accessExp).thenReturn(accessExp)
+            whenever(jwtProperties.refreshExp).thenReturn(refreshExp)
+            whenever(memberRepository.findById(memberId)).thenReturn(Optional.of(member))
+            doNothing().`when`(refreshTokenRepository).delete(refreshTokenEntity)
+            whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock<RefreshTokenEntity>())
+
+            // when
+            val result = memberService.refreshAccessToken(refreshToken)
+
+            // then
+            result.accessToken shouldBe newAccessToken
+            result.refreshToken shouldBe newRefreshToken
+            result.accessTokenExpiredAt shouldNotBe null
+
+            verify(jwtProvider, times(1)).validateOrThrow(refreshToken)
+            verify(jwtProvider, times(1)).getJti(refreshToken)
+            verify(jwtProvider, times(1)).getSubject(refreshToken)
+            verify(refreshTokenRepository, times(1)).findByMemberIdAndJti(memberId, jti)
+            verify(jwtProvider, times(1)).createAccessToken(any(), any())
+            verify(jwtProvider, times(1)).createRefreshToken(any(), any())
+            verify(refreshTokenRepository, times(1)).delete(refreshTokenEntity)
+            verify(refreshTokenRepository, times(1)).save(any<RefreshTokenEntity>())
+        }
+
+        it("유효하지 않은 refreshToken이 주어졌을 때 JWT 예외를 던져야 한다") {
+            val invalidRefreshToken = "invalid-refresh-token"
+
+            whenever(jwtProvider.validateOrThrow(invalidRefreshToken)).thenThrow(
+                JwtException(JwtExceptionCode.INVALID_SIGNATURE)
+            )
+
+            shouldThrow<JwtException> {
+                memberService.refreshAccessToken(invalidRefreshToken)
+            }
+
+            verify(jwtProvider, times(1)).validateOrThrow(invalidRefreshToken)
+            verify(refreshTokenRepository, never()).findByMemberIdAndJti(any(), any())
+        }
+
+        it("DB에 refreshToken이 존재하지 않을 때 MemberException을 던져야 한다") {
+            val refreshToken = "valid-but-not-in-db-token"
+            val jti = "test-jti"
+            val memberId = 1L
+
+            doNothing().`when`(jwtProvider).validateOrThrow(refreshToken)
+            whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
+            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
+            whenever(refreshTokenRepository.findByMemberIdAndJti(memberId, jti)).thenReturn(null)
+
+            shouldThrow<MemberException> {
+                memberService.refreshAccessToken(refreshToken)
+            }.code shouldBe MemberExceptionCode.REFRESHTOKEN_DATABASE_FIND_FAILED
+
+            verify(jwtProvider, times(1)).validateOrThrow(refreshToken)
+            verify(refreshTokenRepository, times(1)).findByMemberIdAndJti(memberId, jti)
+        }
+
+        it("refreshToken이 만료되었을 때 만료된 토큰을 삭제하고 JWT 만료 예외를 던져야 한다") {
+            val expiredRefreshToken = "expired-refresh-token"
+            val jti = "test-jti"
+            val memberId = 1L
+
+            val pastTime = Instant.now().minusSeconds(3600)
+            val refreshTokenEntity = mock<RefreshTokenEntity>()
+            whenever(refreshTokenEntity.expiredAt).thenReturn(pastTime)
+
+            doNothing().`when`(jwtProvider).validateOrThrow(expiredRefreshToken)
+            whenever(jwtProvider.getJti(expiredRefreshToken)).thenReturn(jti)
+            whenever(jwtProvider.getSubject(expiredRefreshToken)).thenReturn(memberId.toString())
+            whenever(refreshTokenRepository.findByMemberIdAndJti(memberId, jti)).thenReturn(refreshTokenEntity)
+            doNothing().`when`(refreshTokenRepository).delete(refreshTokenEntity)
+
+            shouldThrow<JwtException> {
+                memberService.refreshAccessToken(expiredRefreshToken)
+            }.code shouldBe JwtExceptionCode.EXPIRED
+
+            verify(refreshTokenRepository, times(1)).delete(refreshTokenEntity)
+        }
+
+        it("멤버가 존재하지 않을 때NoSuchElementException을 던져야 한다") {
+            val refreshToken = "valid-refresh-token"
+            val jti = "test-jti"
+            val memberId = 999L
+
+            val futureTime = Instant.now().plusSeconds(3600)
+            val refreshTokenEntity = mock<RefreshTokenEntity>()
+            whenever(refreshTokenEntity.expiredAt).thenReturn(futureTime)
+
+            doNothing().`when`(jwtProvider).validateOrThrow(refreshToken)
+            whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
+            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
+            whenever(refreshTokenRepository.findByMemberIdAndJti(memberId, jti)).thenReturn(refreshTokenEntity)
+            whenever(jwtProvider.createAccessToken(any(), any())).thenReturn("new-access-token")
+            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair("new-refresh-token", "new-jti"))
+            whenever(jwtProperties.accessExp).thenReturn(Duration.ofMinutes(30))
+            whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
+            doNothing().`when`(refreshTokenRepository).delete(refreshTokenEntity)
+            whenever(memberRepository.findById(memberId)).thenReturn(Optional.empty())
+
+            shouldThrow<NoSuchElementException> {
+                memberService.refreshAccessToken(refreshToken)
+            }
+
+            verify(memberRepository, times(1)).findById(memberId)
         }
     }
 })

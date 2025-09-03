@@ -93,7 +93,13 @@ class JwtProvider(
             .payload                                    // Claims 객체 추출
             .subject                                    // 주체 값 반환
 
-
+    //jti 반환
+    fun getJti(token: String): String =
+        Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .payload.id
     /**
      * 유효성 검사(예외 던짐) – 표준 에러로 변환
      * 컨트롤러/서비스에서 이 메서드를 사용하면 GlobalExceptionHandler가 잡아줍니다.
