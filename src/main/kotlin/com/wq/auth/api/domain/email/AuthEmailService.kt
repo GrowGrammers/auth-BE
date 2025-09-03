@@ -41,7 +41,7 @@ class AuthEmailService(
         }
     }
 
-    private fun validateEmailFormat(email: String) {
+    fun validateEmailFormat(email: String) {
         try {
             InternetAddress(email).validate()
         } catch (e: Exception) {

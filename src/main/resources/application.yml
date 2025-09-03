@@ -5,6 +5,7 @@ spring:
 
   application:
     name: auth-BE
+
   mail:
     host: smtp.gmail.com
     port: 587
@@ -17,18 +18,12 @@ spring:
           starttls:
             enable: true
 
-springdoc:
-  api-docs:
-    enabled: true
-  swagger-ui:
-    path: ${SWAGGER_PATH}
-
   datasource:
     url: ${DB_URL:jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
     driver-class-name: ${DB_DRIVER:org.h2.Driver}
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:}
-  
+
   jpa:
     hibernate:
       ddl-auto: ${DDL_AUTO:update}
@@ -48,10 +43,15 @@ springdoc:
       enabled: true
       path: /h2-console
 
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: ${SWAGGER_PATH}
+
 app:
   time:
     default-zone: ${APP_DEFAULT_ZONE:Asia/Seoul} # 환경변수 APP_DEFAULT_ZONE이 있으면 그걸 쓰고, 없으면 Asia/Seoul
-
 
 logging:
   level:

@@ -1,11 +1,40 @@
 package com.wq.auth.api.controller.member
 
+import com.wq.auth.api.controller.member.request.EmailLoginRequestDto
+import com.wq.auth.api.domain.email.AuthEmailService
+import com.wq.auth.api.domain.email.error.EmailException
 import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.member.MemberService
+import com.wq.auth.api.domain.member.error.MemberException
+import com.wq.auth.jwt.error.JwtException
+import com.wq.auth.shared.error.ApiException
+import com.wq.auth.shared.error.CommonExceptionCode
+import com.wq.auth.web.common.response.BaseResponse
+import com.wq.auth.web.common.response.Responses
 import org.springframework.web.bind.annotation.*
 
 @RestController
-class MemberController(private val memberService: MemberService) {
+class MemberController(
+    private val memberService: MemberService,
+    private val emailService: AuthEmailService
+) : MemberApiDocs {
+
+    @PostMapping("api/v1/auth/members/email-login")
+    override fun emailLogin(@RequestBody req: EmailLoginRequestDto): BaseResponse {
+        return try {
+            emailService.verifyCode(req.email, req.verifyCode)
+            val resp = memberService.emailLogin(req.email)
+            Responses.success(message = "로그인에 성공했습니다.", data = resp)
+        } catch (e: ApiException) {
+            val code = when (e) {
+                is MemberException -> e.memberCode
+                is EmailException -> e.emailCode
+                is JwtException -> e.jwtCode
+                else -> null
+            }
+            Responses.fail(code ?: CommonExceptionCode.INTERNAL_SERVER_ERROR)
+        }
+    }
 
     @GetMapping("/members")
     fun getAll(): List<MemberEntity> = memberService.getAll()

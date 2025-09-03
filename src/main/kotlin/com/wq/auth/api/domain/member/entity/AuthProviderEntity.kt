@@ -18,8 +18,17 @@ open class AuthProviderEntity(
     @Column(name = "provider_type", nullable = false)
     open var providerType: ProviderType,
 
-    @Column(name = "provider_id", nullable = false)
-    open var providerId: String,
+    @Column(name = "provider_id", nullable = true)
+    open var providerId: String? = null,
 
     open val email: String = "",
-) : BaseEntity()
+) : BaseEntity() {
+    companion object {
+        fun createEmailProvider(member: MemberEntity, email: String) =
+            AuthProviderEntity(
+                member = member,
+                providerType = ProviderType.EMAIL,
+                email = email
+            )
+    }
+}
