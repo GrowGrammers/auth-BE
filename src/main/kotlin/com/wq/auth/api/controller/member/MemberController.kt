@@ -15,6 +15,7 @@ import com.wq.auth.shared.error.ApiException
 import com.wq.auth.shared.error.CommonExceptionCode
 import com.wq.auth.web.common.response.BaseResponse
 import com.wq.auth.web.common.response.Responses
+import com.wq.auth.web.common.response.SuccessResponse
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseCookie
 import org.springframework.web.bind.annotation.*
@@ -57,7 +58,8 @@ class MemberController(
     override fun refreshAccessToken(
         @CookieValue(name = "refreshToken", required = true) refreshToken: String,
         response: HttpServletResponse,
-        @RequestBody req: RefreshAccessTokenRequestDto): BaseResponse {
+        @RequestBody req: RefreshAccessTokenRequestDto
+    ): SuccessResponse<RefreshAccessTokenResponseDto> {
         val (accessToken, newRefreshToken, accessTokenExpiredAt) = memberService.refreshAccessToken(req.refreshToken)
 
         val refreshCookie = ResponseCookie.from("refreshToken", newRefreshToken)
