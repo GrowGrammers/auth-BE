@@ -34,6 +34,7 @@ class MemberService(
         val accessTokenExpiredAt: Long
     )
 
+) {
     @Transactional
     fun emailLogin(email: String): LoginResponseDto {
         val existingUser = authProviderRepository.findByEmail(email)?.member

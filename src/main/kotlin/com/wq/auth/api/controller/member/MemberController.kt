@@ -24,7 +24,8 @@ import org.springframework.web.bind.annotation.*
 class MemberController(
     private val memberService: MemberService,
     private val emailService: AuthEmailService,
-    private val jwtProperties: JwtProperties
+    private val jwtProperties: JwtProperties,
+    private val emailService: AuthEmailService
 ) : MemberApiDocs {
 
     @PostMapping("api/v1/auth/members/email-login")

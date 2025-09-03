@@ -45,9 +45,7 @@ interface MemberApiDocs {
         ]
     )
     fun emailLogin(@RequestBody req: EmailLoginRequestDto): BaseResponse
-
-
-    @Operation(
+ @Operation(
         summary = "로그아웃",
         description = "RefreshToken을 DB에서 삭제하여 로그아웃합니다."
     )
@@ -112,5 +110,4 @@ interface MemberApiDocs {
         @CookieValue(name = "refreshToken", required = true) refreshToken: String,
         response: HttpServletResponse,
         @RequestBody req: RefreshAccessTokenRequestDto): BaseResponse
-
 }

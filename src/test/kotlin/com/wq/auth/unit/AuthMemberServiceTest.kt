@@ -83,7 +83,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMillis(expiredTime))
             whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
-
+            
             // when
             val result = memberService.emailLogin(email)
 
@@ -267,7 +267,6 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMinutes(30))
             whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
-
             // when
             memberService.signUp(email)
 
