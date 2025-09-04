@@ -65,6 +65,7 @@ class AuthMemberServiceTest : DescribeSpec({
             val email = "test@example.com"
             val memberId = 1L
             val nickname = "testUser"
+            val opaqueId = "test-opaque-id"
             val accessToken = "access.token.here"
             val refreshToken = "refresh.token.here"
             val jti = "jwt-id-123"
@@ -75,6 +76,8 @@ class AuthMemberServiceTest : DescribeSpec({
 
             whenever(mockMember.id).thenReturn(memberId)
             whenever(mockMember.nickname).thenReturn(nickname)
+            whenever(mockMember.opaqueId).thenReturn(opaqueId)
+            whenever(mockAuthProvider.email).thenReturn(email)
             whenever(mockAuthProvider.member).thenReturn(mockMember)
 
             whenever(authProviderRepository.findByEmail(email)).thenReturn(mockAuthProvider)
@@ -99,15 +102,17 @@ class AuthMemberServiceTest : DescribeSpec({
             verifyNoInteractions(authEmailService)
         }
 
-        it("기존 사용자 로그인 시 이전 refresh token이 있으면 삭제 후 새로 생성한다") {
+        it("기존 사용자 로그인 시 이전 refreshToken이 있으면 삭제 후 새로 생성한다") {
             // given
             val email = "test@example.com"
             val memberId = 1L
+            val opaqueId = "opaqueId"
             val mockMember = mock<MemberEntity>()
             val mockAuthProvider = mock<AuthProviderEntity>()
             val existingRefreshToken = mock<RefreshTokenEntity>()
 
             whenever(mockMember.id).thenReturn(memberId)
+            whenever(mockMember.opaqueId).thenReturn(opaqueId)
             whenever(mockAuthProvider.member).thenReturn(mockMember)
             whenever(mockAuthProvider.email).thenReturn(email)
 
@@ -131,6 +136,7 @@ class AuthMemberServiceTest : DescribeSpec({
             val email = "newuser@example.com"
             val memberId = 2L
             val nickname = "newUser123"
+            val opaqueId = "new-opaque-id"
             val accessToken = "new.access.token"
             val refreshToken = "new.refresh.token"
             val jti = "new-jwt-id"
@@ -140,6 +146,7 @@ class AuthMemberServiceTest : DescribeSpec({
 
             whenever(mockMember.id).thenReturn(memberId)
             whenever(mockMember.nickname).thenReturn(nickname)
+            whenever(mockMember.opaqueId).thenReturn(opaqueId)
 
             whenever(authProviderRepository.findByEmail(email)).thenReturn(null)
             whenever(nicknameGenerator.generate()).thenReturn(nickname)
@@ -149,6 +156,8 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(jwtProvider.createAccessToken(any(), any())).thenReturn(accessToken)
             whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair(refreshToken, jti))
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMillis(expiredTime))
+            whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
+            whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
 
             // when
             val result = memberService.emailLogin(email)
@@ -346,28 +355,28 @@ class AuthMemberServiceTest : DescribeSpec({
         it("성공 - refreshToken 삭제 호출") {
             // given
             val refreshToken = "dummyToken"
-            val memberId = 1L
+            val opaqueId = "opaqueId"
             val jti = "jti123"
 
-            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
+            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(opaqueId)
             whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
 
             // when
             memberService.logout(refreshToken)
 
             // then
-            verify(refreshTokenRepository, times(1)).deleteByMemberIdAndJti(memberId, jti)
+            verify(refreshTokenRepository, times(1)).deleteByOpaqueIdAndJti(opaqueId, jti)
         }
 
         it("실패 - DB 삭제 예외 발생 시 MemberException 던짐") {
             // given
             val refreshToken = "dummyToken"
-            val memberId = 1L
+            val opaqueId = "opaqueId"
             val jti = "jti123"
 
-            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
+            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(opaqueId)
             whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
-            whenever(refreshTokenRepository.deleteByMemberIdAndJti(memberId, jti))
+            whenever(refreshTokenRepository.deleteByOpaqueIdAndJti(opaqueId, jti))
                 .thenThrow(RuntimeException("DB error"))
 
             // when
@@ -377,7 +386,7 @@ class AuthMemberServiceTest : DescribeSpec({
 
             // then
             ex.code shouldBe MemberExceptionCode.LOGOUT_FAILED
-            verify(refreshTokenRepository, times(1)).deleteByMemberIdAndJti(memberId, jti)
+            verify(refreshTokenRepository, times(1)).deleteByOpaqueIdAndJti(opaqueId, jti)
         }
     }
 
@@ -386,7 +395,7 @@ class AuthMemberServiceTest : DescribeSpec({
             // given
             val refreshToken = "valid-refresh-token"
             val jti = "test-jti"
-            val memberId = 1L
+            val opaqueId = "opaqueId"
             val member = mock<MemberEntity>()
 
             val futureTime = Instant.now().plusSeconds(3600)
@@ -402,13 +411,13 @@ class AuthMemberServiceTest : DescribeSpec({
             // mocking
             doNothing().`when`(jwtProvider).validateOrThrow(refreshToken)
             whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
-            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
-            whenever(refreshTokenRepository.findByMemberIdAndJti(memberId, jti)).thenReturn(refreshTokenEntity)
+            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(opaqueId)
+            whenever(refreshTokenRepository.findByOpaqueIdAndJti(opaqueId, jti)).thenReturn(refreshTokenEntity)
             whenever(jwtProvider.createAccessToken(any(), any())).thenReturn(newAccessToken)
             whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair(newRefreshToken, newJti))
             whenever(jwtProperties.accessExp).thenReturn(accessExp)
             whenever(jwtProperties.refreshExp).thenReturn(refreshExp)
-            whenever(memberRepository.findById(memberId)).thenReturn(Optional.of(member))
+            whenever(memberRepository.findByOpaqueId(opaqueId)).thenReturn(Optional.of(member))
             doNothing().`when`(refreshTokenRepository).delete(refreshTokenEntity)
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock<RefreshTokenEntity>())
 
@@ -423,7 +432,7 @@ class AuthMemberServiceTest : DescribeSpec({
             verify(jwtProvider, times(1)).validateOrThrow(refreshToken)
             verify(jwtProvider, times(1)).getJti(refreshToken)
             verify(jwtProvider, times(1)).getSubject(refreshToken)
-            verify(refreshTokenRepository, times(1)).findByMemberIdAndJti(memberId, jti)
+            verify(refreshTokenRepository, times(1)).findByOpaqueIdAndJti(opaqueId, jti)
             verify(jwtProvider, times(1)).createAccessToken(any(), any())
             verify(jwtProvider, times(1)).createRefreshToken(any(), any())
             verify(refreshTokenRepository, times(1)).delete(refreshTokenEntity)
@@ -442,31 +451,31 @@ class AuthMemberServiceTest : DescribeSpec({
             }
 
             verify(jwtProvider, times(1)).validateOrThrow(invalidRefreshToken)
-            verify(refreshTokenRepository, never()).findByMemberIdAndJti(any(), any())
+            verify(refreshTokenRepository, never()).findByOpaqueIdAndJti(any(), any())
         }
 
         it("DB에 refreshToken이 존재하지 않을 때 MemberException을 던져야 한다") {
             val refreshToken = "valid-but-not-in-db-token"
             val jti = "test-jti"
-            val memberId = 1L
+            val opaqueId = "opaqueId"
 
             doNothing().`when`(jwtProvider).validateOrThrow(refreshToken)
             whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
-            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
-            whenever(refreshTokenRepository.findByMemberIdAndJti(memberId, jti)).thenReturn(null)
+            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(opaqueId)
+            whenever(refreshTokenRepository.findByOpaqueIdAndJti(opaqueId, jti)).thenReturn(null)
 
             shouldThrow<MemberException> {
                 memberService.refreshAccessToken(refreshToken)
             }.code shouldBe MemberExceptionCode.REFRESHTOKEN_DATABASE_FIND_FAILED
 
             verify(jwtProvider, times(1)).validateOrThrow(refreshToken)
-            verify(refreshTokenRepository, times(1)).findByMemberIdAndJti(memberId, jti)
+            verify(refreshTokenRepository, times(1)).findByOpaqueIdAndJti(opaqueId, jti)
         }
 
         it("refreshToken이 만료되었을 때 만료된 토큰을 삭제하고 JWT 만료 예외를 던져야 한다") {
             val expiredRefreshToken = "expired-refresh-token"
             val jti = "test-jti"
-            val memberId = 1L
+            val opaqueId = "opaqueId"
 
             val pastTime = Instant.now().minusSeconds(3600)
             val refreshTokenEntity = mock<RefreshTokenEntity>()
@@ -474,8 +483,8 @@ class AuthMemberServiceTest : DescribeSpec({
 
             doNothing().`when`(jwtProvider).validateOrThrow(expiredRefreshToken)
             whenever(jwtProvider.getJti(expiredRefreshToken)).thenReturn(jti)
-            whenever(jwtProvider.getSubject(expiredRefreshToken)).thenReturn(memberId.toString())
-            whenever(refreshTokenRepository.findByMemberIdAndJti(memberId, jti)).thenReturn(refreshTokenEntity)
+            whenever(jwtProvider.getSubject(expiredRefreshToken)).thenReturn(opaqueId)
+            whenever(refreshTokenRepository.findByOpaqueIdAndJti(opaqueId, jti)).thenReturn(refreshTokenEntity)
             doNothing().`when`(refreshTokenRepository).delete(refreshTokenEntity)
 
             shouldThrow<JwtException> {
@@ -488,7 +497,7 @@ class AuthMemberServiceTest : DescribeSpec({
         it("멤버가 존재하지 않을 때NoSuchElementException을 던져야 한다") {
             val refreshToken = "valid-refresh-token"
             val jti = "test-jti"
-            val memberId = 999L
+            val opaqueId = "opaqueId"
 
             val futureTime = Instant.now().plusSeconds(3600)
             val refreshTokenEntity = mock<RefreshTokenEntity>()
@@ -496,20 +505,20 @@ class AuthMemberServiceTest : DescribeSpec({
 
             doNothing().`when`(jwtProvider).validateOrThrow(refreshToken)
             whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
-            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
-            whenever(refreshTokenRepository.findByMemberIdAndJti(memberId, jti)).thenReturn(refreshTokenEntity)
+            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(opaqueId)
+            whenever(refreshTokenRepository.findByOpaqueIdAndJti(opaqueId, jti)).thenReturn(refreshTokenEntity)
             whenever(jwtProvider.createAccessToken(any(), any())).thenReturn("new-access-token")
             whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair("new-refresh-token", "new-jti"))
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMinutes(30))
             whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
             doNothing().`when`(refreshTokenRepository).delete(refreshTokenEntity)
-            whenever(memberRepository.findById(memberId)).thenReturn(Optional.empty())
+            whenever(memberRepository.findByOpaqueId(opaqueId)).thenReturn(Optional.empty())
 
             shouldThrow<NoSuchElementException> {
                 memberService.refreshAccessToken(refreshToken)
             }
 
-            verify(memberRepository, times(1)).findById(memberId)
+            verify(memberRepository, times(1)).findByOpaqueId(opaqueId)
         }
     }
 })

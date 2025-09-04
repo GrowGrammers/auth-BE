@@ -1,7 +1,10 @@
 package com.wq.auth.integration
 
 import com.wq.auth.api.controller.member.MemberController
+import com.wq.auth.api.domain.email.AuthEmailService
 import com.wq.auth.api.domain.member.MemberService
+import com.wq.auth.jwt.JwtProperties
+import com.wq.auth.jwt.JwtProvider
 import com.wq.auth.jwt.error.JwtException
 import com.wq.auth.jwt.error.JwtExceptionCode
 import io.kotest.core.spec.style.DescribeSpec
@@ -31,6 +34,12 @@ class MemberControllerIntegrationTest : DescribeSpec() {
 
     @MockitoBean
     lateinit var memberService: MemberService
+
+    @MockitoBean
+    lateinit var authEmailService: AuthEmailService
+
+    @MockitoBean
+    lateinit var jwtProperties: JwtProperties
 
     init {
         describe("POST /api/v1/auth/members/refresh") {
