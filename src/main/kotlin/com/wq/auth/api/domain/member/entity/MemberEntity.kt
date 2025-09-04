@@ -3,6 +3,7 @@ package com.wq.auth.api.domain.member.entity
 import com.wq.auth.shared.entity.BaseEntity
 import jakarta.persistence.*
 import java.time.LocalDateTime
+import java.util.*
 
 @Entity
 @Table(name = "member")
@@ -27,6 +28,9 @@ open class MemberEntity(
 
     @Column(name = "is_deleted", nullable = false)
     open var isDeleted: Boolean = false,
+
+    @Column(name = "opaque_id", nullable = false, unique = true, updatable = false, length = 64)
+    open val opaqueId: String = UUID.randomUUID().toString()
 
     ) : BaseEntity() {
     companion object {

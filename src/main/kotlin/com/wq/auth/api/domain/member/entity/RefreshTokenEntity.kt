@@ -7,11 +7,6 @@ import java.time.Instant
 @Entity
 @Table(name = "refresh_token")
 class RefreshTokenEntity(
-
-    //TODO
-    //Redis로 넘어갈 때 memberId말고 OpaqueToken으로
-    //OpaqueToken, deviceId, jti
-
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
@@ -25,13 +20,17 @@ class RefreshTokenEntity(
     @Column(name = "expired_at", nullable = false)
     var expiredAt: Instant,
 
+    @Column(name = "opaque_id", nullable = false, length = 64)
+    val opaqueId: String,
+
     )  : BaseEntity() {
     companion object {
-        fun of(member: MemberEntity, jti: String, expiredAt: Instant): RefreshTokenEntity {
+        fun of(member: MemberEntity, jti: String, expiredAt: Instant, opaqueId: String): RefreshTokenEntity {
             return RefreshTokenEntity(
                 member = member,
                 jti = jti,
-                expiredAt = expiredAt
+                expiredAt = expiredAt,
+                opaqueId = opaqueId
             )
         }
     }

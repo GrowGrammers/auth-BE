@@ -13,9 +13,9 @@ interface RefreshTokenRepository : JpaRepository<RefreshTokenEntity, Long> {
 
     @Transactional
     @Modifying
-    @Query("delete from RefreshTokenEntity r where r.member.id = :memberId and r.jti = :jti")
-    fun deleteByMemberIdAndJti(memberId: Long, jti: String)
+    @Query("delete from RefreshTokenEntity r where r.member.opaqueId = :opaqueId and r.jti = :jti")
+    fun deleteByOpaqueIdAndJti(opaqueId: String, jti: String)
 
-    @Query("select r from RefreshTokenEntity r where r.member.id = :memberId and r.jti = :jti")
-    fun findByMemberIdAndJti(memberId: Long, jti: String): RefreshTokenEntity?
+    @Query("select r from RefreshTokenEntity r where r.member.opaqueId = :opaqueId and r.jti = :jti")
+    fun findByOpaqueIdAndJti(opaqueId: String, jti: String): RefreshTokenEntity?
 }
