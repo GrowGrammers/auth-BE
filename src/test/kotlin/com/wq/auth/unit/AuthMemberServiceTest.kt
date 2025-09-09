@@ -5,16 +5,16 @@ import com.wq.auth.api.domain.member.MemberService
 import com.wq.auth.api.domain.member.entity.AuthProviderEntity
 import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.member.entity.ProviderType
-import com.wq.auth.jwt.JwtProperties
-import com.wq.auth.jwt.JwtProvider
 import com.wq.auth.api.domain.member.AuthProviderRepository
 import com.wq.auth.api.domain.member.MemberRepository
 import com.wq.auth.api.domain.member.RefreshTokenRepository
 import com.wq.auth.api.domain.member.entity.RefreshTokenEntity
 import com.wq.auth.api.domain.member.error.MemberException
 import com.wq.auth.api.domain.member.error.MemberExceptionCode
-import com.wq.auth.jwt.error.JwtException
-import com.wq.auth.jwt.error.JwtExceptionCode
+import com.wq.auth.security.jwt.JwtProperties
+import com.wq.auth.security.jwt.JwtProvider
+import com.wq.auth.security.jwt.error.JwtException
+import com.wq.auth.security.jwt.error.JwtExceptionCode
 import com.wq.auth.shared.utils.NicknameGenerator
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
@@ -79,7 +79,7 @@ class AuthMemberServiceTest : DescribeSpec({
 
             whenever(authProviderRepository.findByEmail(email)).thenReturn(mockAuthProvider)
             whenever(jwtProvider.createAccessToken(any(), any())).thenReturn(accessToken)
-            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair(refreshToken, jti))
+            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(refreshToken)
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMillis(expiredTime))
             whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
@@ -114,7 +114,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(authProviderRepository.findByEmail(email)).thenReturn(mockAuthProvider)
             whenever(refreshTokenRepository.findByMember(mockMember)).thenReturn(existingRefreshToken)
             whenever(jwtProvider.createAccessToken(any(), any())).thenReturn("access-token")
-            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair("refresh-token", "jti"))
+            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn("refresh-token")
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMinutes(30))
             whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
 
@@ -147,7 +147,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(memberRepository.save(any<MemberEntity>())).thenReturn(mockMember)
             whenever(authProviderRepository.save(any<AuthProviderEntity>())).thenReturn(mock())
             whenever(jwtProvider.createAccessToken(any(), any())).thenReturn(accessToken)
-            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair(refreshToken, jti))
+            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(refreshToken)
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMillis(expiredTime))
 
             // when
@@ -188,7 +188,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(memberRepository.save(any<MemberEntity>())).thenReturn(mockMember)
             whenever(authProviderRepository.save(any<AuthProviderEntity>())).thenReturn(mock())
             whenever(jwtProvider.createAccessToken(any(), any())).thenReturn(accessToken)
-            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair(refreshToken, jti))
+            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(refreshToken)
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMillis(expiredTime))
 
             // when
@@ -231,7 +231,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(memberRepository.save(any<MemberEntity>())).thenReturn(mockMember)
             whenever(authProviderRepository.save(any<AuthProviderEntity>())).thenReturn(mock())
             whenever(jwtProvider.createAccessToken(any(), any())).thenReturn(accessToken)
-            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair(refreshToken, "jti"))
+            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(refreshToken)
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMillis(expiredTime))
 
             // when
@@ -263,7 +263,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(memberRepository.save(any<MemberEntity>())).thenReturn(mockMember)
             whenever(authProviderRepository.save(any<AuthProviderEntity>())).thenReturn(mock())
             whenever(jwtProvider.createAccessToken(any(), any())).thenReturn("token")
-            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair("refresh", "jti"))
+            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn("refresh")
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMinutes(30))
             whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
@@ -304,7 +304,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(memberRepository.save(memberCaptor.capture())).thenAnswer { it.arguments[0] as MemberEntity }
             whenever(authProviderRepository.save(providerCaptor.capture())).thenAnswer { it.arguments[0] as AuthProviderEntity }
             whenever(jwtProvider.createAccessToken(any(), any())).thenReturn("token")
-            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair("refresh", "jti"))
+            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn("refresh")
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMillis(1800000L))
 
             // when
@@ -349,8 +349,7 @@ class AuthMemberServiceTest : DescribeSpec({
             val memberId = 1L
             val jti = "jti123"
 
-            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
-            whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
+            whenever(jwtProvider.getOpaqueId(refreshToken)).thenReturn(memberId.toString())
 
             // when
             memberService.logout(refreshToken)
@@ -365,8 +364,7 @@ class AuthMemberServiceTest : DescribeSpec({
             val memberId = 1L
             val jti = "jti123"
 
-            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
-            whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
+            whenever(jwtProvider.getOpaqueId(refreshToken)).thenReturn(memberId.toString())
             whenever(refreshTokenRepository.deleteByMemberIdAndJti(memberId, jti))
                 .thenThrow(RuntimeException("DB error"))
 
@@ -401,11 +399,9 @@ class AuthMemberServiceTest : DescribeSpec({
 
             // mocking
             doNothing().`when`(jwtProvider).validateOrThrow(refreshToken)
-            whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
-            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
             whenever(refreshTokenRepository.findByMemberIdAndJti(memberId, jti)).thenReturn(refreshTokenEntity)
             whenever(jwtProvider.createAccessToken(any(), any())).thenReturn(newAccessToken)
-            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair(newRefreshToken, newJti))
+            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(newRefreshToken, newJti)
             whenever(jwtProperties.accessExp).thenReturn(accessExp)
             whenever(jwtProperties.refreshExp).thenReturn(refreshExp)
             whenever(memberRepository.findById(memberId)).thenReturn(Optional.of(member))
@@ -421,8 +417,6 @@ class AuthMemberServiceTest : DescribeSpec({
             result.accessTokenExpiredAt shouldNotBe null
 
             verify(jwtProvider, times(1)).validateOrThrow(refreshToken)
-            verify(jwtProvider, times(1)).getJti(refreshToken)
-            verify(jwtProvider, times(1)).getSubject(refreshToken)
             verify(refreshTokenRepository, times(1)).findByMemberIdAndJti(memberId, jti)
             verify(jwtProvider, times(1)).createAccessToken(any(), any())
             verify(jwtProvider, times(1)).createRefreshToken(any(), any())
@@ -451,8 +445,6 @@ class AuthMemberServiceTest : DescribeSpec({
             val memberId = 1L
 
             doNothing().`when`(jwtProvider).validateOrThrow(refreshToken)
-            whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
-            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
             whenever(refreshTokenRepository.findByMemberIdAndJti(memberId, jti)).thenReturn(null)
 
             shouldThrow<MemberException> {
@@ -473,8 +465,6 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(refreshTokenEntity.expiredAt).thenReturn(pastTime)
 
             doNothing().`when`(jwtProvider).validateOrThrow(expiredRefreshToken)
-            whenever(jwtProvider.getJti(expiredRefreshToken)).thenReturn(jti)
-            whenever(jwtProvider.getSubject(expiredRefreshToken)).thenReturn(memberId.toString())
             whenever(refreshTokenRepository.findByMemberIdAndJti(memberId, jti)).thenReturn(refreshTokenEntity)
             doNothing().`when`(refreshTokenRepository).delete(refreshTokenEntity)
 
@@ -495,11 +485,9 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(refreshTokenEntity.expiredAt).thenReturn(futureTime)
 
             doNothing().`when`(jwtProvider).validateOrThrow(refreshToken)
-            whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
-            whenever(jwtProvider.getSubject(refreshToken)).thenReturn(memberId.toString())
             whenever(refreshTokenRepository.findByMemberIdAndJti(memberId, jti)).thenReturn(refreshTokenEntity)
             whenever(jwtProvider.createAccessToken(any(), any())).thenReturn("new-access-token")
-            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(Pair("new-refresh-token", "new-jti"))
+            whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn("new-refresh-token")
             whenever(jwtProperties.accessExp).thenReturn(Duration.ofMinutes(30))
             whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
             doNothing().`when`(refreshTokenRepository).delete(refreshTokenEntity)
