@@ -25,18 +25,23 @@ repositories {
 	mavenCentral()
 }
 
+extra["spring-security.version"] = "6.5.3"
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.springframework.boot:spring-boot-starter-mail")
 	implementation("me.paulschwarz:spring-dotenv:4.0.0")
 	runtimeOnly("com.h2database:h2")
 	implementation("org.springframework.boot:spring-boot-starter-logging")
+	implementation("io.github.oshai:kotlin-logging-jvm:5.1.4")
 
 	// test
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.security:spring-security-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")

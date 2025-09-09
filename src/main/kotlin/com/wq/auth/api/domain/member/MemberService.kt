@@ -7,10 +7,10 @@ import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.member.entity.RefreshTokenEntity
 import com.wq.auth.api.domain.member.error.MemberException
 import com.wq.auth.api.domain.member.error.MemberExceptionCode
-import com.wq.auth.jwt.JwtProperties
-import com.wq.auth.jwt.JwtProvider
-import com.wq.auth.jwt.error.JwtException
-import com.wq.auth.jwt.error.JwtExceptionCode
+import com.wq.auth.shared.jwt.JwtProperties
+import com.wq.auth.shared.jwt.JwtProvider
+import com.wq.auth.shared.jwt.error.JwtException
+import com.wq.auth.shared.jwt.error.JwtExceptionCode
 import com.wq.auth.shared.utils.NicknameGenerator
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -34,13 +34,12 @@ class MemberService(
         val accessTokenExpiredAt: Long
     )
 
-) {
     @Transactional
     fun emailLogin(email: String): LoginResponseDto {
         val existingUser = authProviderRepository.findByEmail(email)?.member
         // 이미 가입된 사용자 → 로그인 처리 및 JWT 발급
         return if (existingUser != null) {
-            val accessToken = jwtProvider.createAccessToken(subject = existingUser.id.toString())
+            val accessToken = jwtProvider.createAccessTokenDeprecated(subject = existingUser.id.toString())
             val existingRefreshToken = refreshTokenRepository.findByMember(existingUser)
 
             //이전 리프레시토큰 삭제
@@ -48,7 +47,7 @@ class MemberService(
                 refreshTokenRepository.delete(existingRefreshToken)
             }
 
-            val (refreshToken, jti) = jwtProvider.createRefreshToken(subject = existingUser.id.toString())
+            val (refreshToken, jti) = jwtProvider.createRefreshTokenDeprecated(subject = existingUser.id.toString())
 
             val now = System.currentTimeMillis()
             val accessTokenExpiredAt = now + jwtProperties.accessExp.toMillis()
@@ -84,8 +83,8 @@ class MemberService(
             throw MemberException(MemberExceptionCode.DATABASE_SAVE_FAILED, ex)
         }
 
-        val accessToken = jwtProvider.createAccessToken(subject = member.id.toString())
-        val (refreshToken, jti) = jwtProvider.createRefreshToken(subject = member.id.toString())
+        val accessToken = jwtProvider.createAccessTokenDeprecated(subject = member.id.toString())
+        val (refreshToken, jti) = jwtProvider.createRefreshTokenDeprecated(subject = member.id.toString())
 
         val now = System.currentTimeMillis()
         val accessTokenExpiredAt = now + jwtProperties.accessExp.toMillis()
@@ -127,8 +126,8 @@ class MemberService(
         }
 
         // 5. AccessToken, RefreshToken 재발급
-        val newAccessToken = jwtProvider.createAccessToken(subject = memberId.toString())
-        val (newRefreshToken, newJti) = jwtProvider.createRefreshToken(subject = memberId.toString())
+        val newAccessToken = jwtProvider.createAccessTokenDeprecated(subject = memberId.toString())
+        val (newRefreshToken, newJti) = jwtProvider.createRefreshTokenDeprecated(subject = memberId.toString())
 
         // 기존 RefreshToken 삭제
         refreshTokenRepository.delete(refreshTokenEntity)

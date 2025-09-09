@@ -3,37 +3,82 @@ package com.wq.auth.api.domain.member.entity
 import com.wq.auth.shared.entity.BaseEntity
 import jakarta.persistence.*
 import java.time.LocalDateTime
+import java.util.*
 
 @Entity
-@Table(name = "member")
-open class MemberEntity(
+@Table(
+    name = "member",
+    indexes = [
+        Index(name = "idx_member_opaque_id", columnList = "opaque_id", unique = true)
+    ]
+)
+open class MemberEntity protected constructor(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    open val id: Long = 0,
+    val id: Long = 0,
 
     @Column(name = "provider_id")
-    open val providerId: String? = null,
+    val providerId: String? = null,
 
-    open var nickname: String = "",
+    @Column(name = "opaque_id", nullable = false, unique = true, length = 36)
+    val opaqueId: String,
+
+    @Column(nullable = false, length = 100)
+    var nickname: String,
 
     @Enumerated(EnumType.STRING)
-    open val role: Role = Role.MEMBER,
+    @Column(nullable = false)
+    val role: Role = Role.MEMBER,
 
     @Column(name = "is_email_verified", nullable = false)
-    open var isEmailVerified: Boolean = false,
+    var isEmailVerified: Boolean = false,
 
     @Column(name = "last_login_at")
-    open var lastLoginAt: LocalDateTime? = null,
+    var lastLoginAt: LocalDateTime? = null,
 
     @Column(name = "is_deleted", nullable = false)
-    open var isDeleted: Boolean = false,
+    var isDeleted: Boolean = false,
 
-    ) : BaseEntity() {
+) : BaseEntity() {
+
     companion object {
         fun createEmailVerifiedMember(nickname: String) =
             MemberEntity(
                 nickname = nickname,
-                isEmailVerified = true
+                isEmailVerified = true,
+                opaqueId = UUID.randomUUID().toString(),
             )
+
+        fun create(
+            providerId: String? = null,
+            nickname: String,
+            role: Role = Role.MEMBER
+        ): MemberEntity {
+            require(nickname.isNotBlank()) { "닉네임은 필수입니다" }
+            require(nickname.length <= 100) { "닉네임은 100자를 초과할 수 없습니다" }
+
+            return MemberEntity(
+                providerId = providerId,
+                opaqueId = UUID.randomUUID().toString(),
+                nickname = nickname.trim(),
+                role = role
+            )
+        }
+    }
+
+    /**
+     * 이메일 인증 완료 처리
+     */
+    fun verifyEmail() {
+        this.isEmailVerified = true
+    }
+
+    /**
+     * 관리자 권한 확인
+     */
+    fun isAdmin(): Boolean = role == Role.ADMIN
+
+    override fun toString(): String {
+        return "MemberEntity(id=$id, opaqueId='$opaqueId', nickname='$nickname', role=$role)"
     }
 }
