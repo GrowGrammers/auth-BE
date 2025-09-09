@@ -1,8 +1,8 @@
-package com.wq.auth.shared.jwt
+package com.wq.auth.security.jwt
 
 import com.wq.auth.api.domain.member.entity.Role
-import com.wq.auth.shared.jwt.error.JwtException
-import com.wq.auth.shared.jwt.error.JwtExceptionCode
+import com.wq.auth.security.jwt.error.JwtException
+import com.wq.auth.security.jwt.error.JwtExceptionCode
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.MalformedJwtException
@@ -23,6 +23,19 @@ class JwtProvider(
         Decoders.BASE64.decode(jwtProperties.secret)
     )
 
+    /**
+     * AccessToken을 발급합니다.
+     *
+     * @param opaqueId 사용자의 UUID (opaque identifier)
+     * @param role 사용자 역할 (MEMBER, ADMIN)
+     * @return 생성된 JWT AccessToken 문자열
+     *
+     * 토큰 구조:
+     * - sub : opaqueId (UUID)
+     * - iat : 발급 시각
+     * - exp : 만료 시각
+     * - role : 사용자 역할
+     */
     fun createAccessToken(
         opaqueId: String,
         role: Role
@@ -39,20 +52,16 @@ class JwtProvider(
             .compact()
     }
 
-    fun createAccessTokenDeprecated(
-        subject: String
-    ): String {
-        val now = Instant.now()
-        val exp = Date.from(now.plus(jwtProperties.accessExp))
-
-        return Jwts.builder()
-            .issuedAt(Date.from(now))
-            .expiration(exp)
-            .claim("subject", subject)
-            .signWith(key, Jwts.SIG.HS256)
-            .compact()
-    }
-
+    /**
+     * RefreshToken을 발급합니다.
+     *
+     * @param opaqueId 사용자의 UUID (opaque identifier)
+     * @param jti 토큰 고유 식별자 (재발급/회전 시 검증용, 기본값: 랜덤 UUID)
+     * @return 생성된 JWT RefreshToken 문자열
+     *
+     * RefreshToken은 role 정보가 필요하지 않으므로 opaqueId와 만료시간만 포함합니다.
+     * DB에 jti를 저장해두고 재사용 방지 로직을 구현할 수 있습니다.
+     */
     fun createRefreshToken(
         opaqueId: String,
         jti: String = UUID.randomUUID().toString()
@@ -69,59 +78,46 @@ class JwtProvider(
             .compact()
     }
 
-    fun createRefreshTokenDeprecated(
-        subject: String,
-        jti: String = UUID.randomUUID().toString()
-    ): Pair<String, String> { // Pair<token, jti>
-        val now = Instant.now()
-        val exp = Date.from(now.plus(jwtProperties.refreshExp))
-
-        val token = Jwts.builder()
-            .subject(subject)
-            .id(jti)                 // jti 클레임: RefreshToken 고유 식별자
-            .issuedAt(Date.from(now))
-            .expiration(exp)
-            .signWith(key, Jwts.SIG.HS256)
-            .compact()
-
-        return Pair(token, jti)
-    }
-
+    /**
+     * JWT 토큰에서 opaqueId(subject)를 추출합니다.
+     * @param token 대상 JWT 토큰
+     * @return 사용자의 opaqueId (UUID)
+     */
     fun getOpaqueId(token: String): String =
         Jwts.parser().verifyWith(key)
             .build().parseSignedClaims(token)
             .payload
             .subject
 
-    fun getRoleDeprecated(token: String): String? =
-        Jwts.parser().verifyWith(key)
-            .build().parseSignedClaims(token)
-            .payload
-            .get("role", String::class.java)
-
+    /**
+     * JWT 토큰에서 role을 추출합니다.
+     * @param token 대상 JWT 토큰
+     * @return 사용자의 역할 (MEMBER, ADMIN 등)
+     */
     fun getRole(token: String): Role? {
         val roleString = Jwts.parser().verifyWith(key)
             .build().parseSignedClaims(token)
             .payload
             .get("role", String::class.java)
-
+        
         return roleString?.let { Role.valueOf(it) }
     }
 
-    fun getSubject(token: String): String =
-        Jwts.parser().verifyWith(key)                   // 서명 검증에 사용할 키 설정
-            .build().parseSignedClaims(token)     // 토큰을 검증하며 파싱
-            .payload                                    // Claims 객체 추출
-            .subject
+    /**
+     * JWT 토큰에서 모든 클레임을 추출합니다.
+     * @param token 대상 JWT 토큰
+     * @return 모든 클레임을 담은 Map
+     */
+    fun getAllClaims(token: String): Map<String, Any> =
+        Jwts.parser().verifyWith(key)
+            .build().parseSignedClaims(token)
+            .payload
 
-    //jti 반환
-    fun getJti(token: String): String =
-        Jwts.parser()
-            .verifyWith(key)
-            .build()
-            .parseSignedClaims(token)
-            .payload.id
-
+    /**
+     * 액세스 토큰의 만료 시간(초)을 반환합니다.
+     * @return 액세스 토큰 만료 시간 (초 단위)
+     */
+    fun getAccessTokenExpirationSeconds(): Long = jwtProperties.accessExp.toSeconds()
 
     /**
      * 유효성 검사(예외 던짐) – 표준 에러로 변환

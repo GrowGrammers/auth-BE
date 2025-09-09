@@ -1,7 +1,7 @@
 package com.wq.auth.integration.security
 
 import com.wq.auth.api.domain.member.entity.Role
-import com.wq.auth.shared.jwt.JwtProvider
+import com.wq.auth.security.jwt.JwtProvider
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
