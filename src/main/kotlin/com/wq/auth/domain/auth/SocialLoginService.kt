@@ -5,10 +5,10 @@ import com.wq.auth.api.domain.member.MemberRepository
 import com.wq.auth.api.domain.member.entity.AuthProviderEntity
 import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.member.entity.ProviderType
-import com.wq.auth.api.controller.oauth.dto.GoogleUserInfoDto
 import com.wq.auth.domain.auth.request.SocialLoginRequest
 import com.wq.auth.domain.auth.response.SocialLoginResult
-import com.wq.auth.domain.oauth.GoogleOAuthService
+import com.wq.auth.domain.oauth.OAuthClient
+import com.wq.auth.domain.oauth.OAuthUser
 import com.wq.auth.domain.oauth.error.SocialLoginException
 import com.wq.auth.domain.oauth.error.SocialLoginExceptionCode
 import com.wq.auth.security.jwt.JwtProvider
@@ -29,7 +29,7 @@ import java.time.LocalDateTime
 @Service
 @Transactional(readOnly = true)
 class SocialLoginService(
-    private val googleOAuthService: GoogleOAuthService,
+    private val oauthClient: OAuthClient,
     private val memberRepository: MemberRepository,
     private val authProviderRepository: AuthProviderRepository,
     private val jwtProvider: JwtProvider
@@ -60,20 +60,20 @@ class SocialLoginService(
     private fun processGoogleLogin(request: SocialLoginRequest): SocialLoginResult {
         log.info { "Google 소셜 로그인 처리 시작" }
 
-        // 1. Google에서 사용자 정보 조회
-        val googleUserInfo = googleOAuthService.getUserInfoFromAuthCode(
+        // 1. OAuth 클라이언트를 통해 사용자 정보 조회
+        val oauthUser = oauthClient.getUserFromAuthCode(
             request.authCode,
             request.codeVerifier,
             request.redirectUri
         )
 
-        log.info { "Google 사용자 정보 조회 완료: ${googleUserInfo.email}" }
+        log.info { "OAuth 사용자 정보 조회 완료: ${oauthUser.email}" }
 
         // 2. 기존 회원 확인 또는 신규 회원 생성
-        val (member, isNewMember) = findOrCreateMember(googleUserInfo, ProviderType.GOOGLE)
+        val (member, isNewMember) = findOrCreateMember(oauthUser, oauthUser.providerType)
 
         // 3. AuthProvider 엔티티 생성/업데이트
-        createOrUpdateAuthProvider(member, googleUserInfo, ProviderType.GOOGLE)
+        createOrUpdateAuthProvider(member, oauthUser, oauthUser.providerType)
 
         // 4. 로그인 시간 업데이트
         member.lastLoginAt = LocalDateTime.now()
@@ -94,18 +94,18 @@ class SocialLoginService(
     /**
      * 기존 회원을 찾거나 신규 회원을 생성합니다.
      *
-     * @param googleUserInfo Google 사용자 정보
+     * @param oauthUser OAuth 사용자 정보
      * @param providerType 소셜 제공자 타입
      * @return Pair<회원 엔티티, 신규 회원 여부>
      */
     private fun findOrCreateMember(
-        googleUserInfo: GoogleUserInfoDto,
+        oauthUser: OAuthUser,
         providerType: ProviderType
     ): Pair<MemberEntity, Boolean> {
 
         // AuthProvider 테이블에서 기존 회원 확인
         val existingAuthProvider = authProviderRepository.findByProviderIdAndProviderType(
-            googleUserInfo.getProviderId(),
+            oauthUser.providerId,
             providerType
         )
 
@@ -115,18 +115,18 @@ class SocialLoginService(
         }
 
         // MemberEntity의 providerId로도 확인 (기존 데이터 호환성)
-        val existingMember = memberRepository.findByProviderId(googleUserInfo.getProviderId())
+        val existingMember = memberRepository.findByProviderId(oauthUser.providerId)
         if (existingMember.isPresent) {
             log.info { "기존 회원 발견 (providerId 기준): ${existingMember.get().opaqueId}" }
             return Pair(existingMember.get(), false)
         }
 
         // 신규 회원 생성
-        log.info { "신규 회원 생성: ${googleUserInfo.email}" }
+        log.info { "신규 회원 생성: ${oauthUser.email}" }
         val newMember = MemberEntity.Companion.createSocialMember(
-            providerId = googleUserInfo.getProviderId(),
-            nickname = googleUserInfo.getNickname(),
-            isEmailVerified = googleUserInfo.verifiedEmail
+            providerId = oauthUser.providerId,
+            nickname = oauthUser.getNickname(),
+            isEmailVerified = oauthUser.verifiedEmail
         )
 
         val savedMember = memberRepository.save(newMember)
@@ -139,12 +139,12 @@ class SocialLoginService(
      * AuthProvider 엔티티를 생성하거나 업데이트합니다.
      *
      * @param member 회원 엔티티
-     * @param googleUserInfo Google 사용자 정보
+     * @param oauthUser OAuth 사용자 정보
      * @param providerType 소셜 제공자 타입
      */
     private fun createOrUpdateAuthProvider(
         member: MemberEntity,
-        googleUserInfo: GoogleUserInfoDto,
+        oauthUser: OAuthUser,
         providerType: ProviderType
     ) {
         val existingAuthProvider = authProviderRepository.findByMemberAndProviderType(member, providerType)
@@ -153,7 +153,7 @@ class SocialLoginService(
             // 기존 AuthProvider 업데이트
             val authProvider = existingAuthProvider.get()
             // providerId와 email을 업데이트하는 메서드 호출 (엔티티에 setter 메서드가 있어야 함)
-            authProvider.updateProviderInfo(googleUserInfo.getProviderId(), googleUserInfo.email)
+            authProvider.updateProviderInfo(oauthUser.providerId, oauthUser.email)
             authProviderRepository.save(authProvider)
             log.info { "AuthProvider 업데이트 완료: ${member.opaqueId}" }
         } else {
@@ -161,8 +161,8 @@ class SocialLoginService(
             val authProvider = AuthProviderEntity(
                 member = member,
                 providerType = providerType,
-                providerId = googleUserInfo.getProviderId(),
-                email = googleUserInfo.email
+                providerId = oauthUser.providerId,
+                email = oauthUser.email
             )
             authProviderRepository.save(authProvider)
             log.info { "AuthProvider 생성 완료: ${member.opaqueId}" }
