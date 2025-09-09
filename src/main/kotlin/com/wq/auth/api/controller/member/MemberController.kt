@@ -9,10 +9,10 @@ import com.wq.auth.api.domain.email.error.EmailException
 import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.member.MemberService
 import com.wq.auth.api.domain.member.error.MemberException
-import com.wq.auth.jwt.JwtProperties
-import com.wq.auth.jwt.error.JwtException
 import com.wq.auth.shared.error.ApiException
 import com.wq.auth.shared.error.CommonExceptionCode
+import com.wq.auth.shared.jwt.JwtProperties
+import com.wq.auth.shared.jwt.error.JwtException
 import com.wq.auth.web.common.response.BaseResponse
 import com.wq.auth.web.common.response.Responses
 import com.wq.auth.web.common.response.SuccessResponse
@@ -24,8 +24,7 @@ import org.springframework.web.bind.annotation.*
 class MemberController(
     private val memberService: MemberService,
     private val emailService: AuthEmailService,
-    private val jwtProperties: JwtProperties,
-    private val emailService: AuthEmailService
+    private val jwtProperties: JwtProperties
 ) : MemberApiDocs {
 
     @PostMapping("api/v1/auth/members/email-login")

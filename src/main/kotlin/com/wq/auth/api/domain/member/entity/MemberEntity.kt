@@ -45,7 +45,8 @@ open class MemberEntity protected constructor(
         fun createEmailVerifiedMember(nickname: String) =
             MemberEntity(
                 nickname = nickname,
-                isEmailVerified = true
+                isEmailVerified = true,
+                opaqueId = UUID.randomUUID().toString(),
             )
 
         fun create(

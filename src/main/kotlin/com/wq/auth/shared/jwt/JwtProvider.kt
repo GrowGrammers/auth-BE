@@ -39,18 +39,16 @@ class JwtProvider(
             .compact()
     }
 
-    fun createAccessToken(
-        opaqueId: String,
-        role: String
+    fun createAccessTokenDeprecated(
+        subject: String
     ): String {
         val now = Instant.now()
         val exp = Date.from(now.plus(jwtProperties.accessExp))
 
         return Jwts.builder()
-            .subject(opaqueId)
             .issuedAt(Date.from(now))
             .expiration(exp)
-            .claim("role", role.toString())
+            .claim("subject", subject)
             .signWith(key, Jwts.SIG.HS256)
             .compact()
     }
@@ -71,7 +69,7 @@ class JwtProvider(
             .compact()
     }
 
-    fun createRefreshToken(
+    fun createRefreshTokenDeprecated(
         subject: String,
         jti: String = UUID.randomUUID().toString()
     ): Pair<String, String> { // Pair<token, jti>
@@ -95,7 +93,7 @@ class JwtProvider(
             .payload
             .subject
 
-    fun getRole(token: String): String? =
+    fun getRoleDeprecated(token: String): String? =
         Jwts.parser().verifyWith(key)
             .build().parseSignedClaims(token)
             .payload
