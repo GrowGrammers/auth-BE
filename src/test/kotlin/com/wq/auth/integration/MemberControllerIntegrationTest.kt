@@ -2,8 +2,8 @@ package com.wq.auth.integration
 
 import com.wq.auth.api.controller.member.MemberController
 import com.wq.auth.api.domain.member.MemberService
-import com.wq.auth.jwt.error.JwtException
-import com.wq.auth.jwt.error.JwtExceptionCode
+import com.wq.auth.security.jwt.error.JwtException
+import com.wq.auth.security.jwt.error.JwtExceptionCode
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.extensions.spring.SpringTestExtension
 import org.mockito.BDDMockito.given
