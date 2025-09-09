@@ -21,8 +21,21 @@ open class AuthProviderEntity(
     @Column(name = "provider_id", nullable = true)
     open var providerId: String? = null,
 
-    open val email: String = "",
+    @Column(name = "email")
+    open var email: String = "",
 ) : BaseEntity() {
+
+    /**
+     * 소셜 제공자 정보를 업데이트합니다.
+     * 
+     * @param newProviderId 새로운 제공자 ID
+     * @param newEmail 새로운 이메일
+     */
+    fun updateProviderInfo(newProviderId: String, newEmail: String) {
+        this.providerId = newProviderId
+        this.email = newEmail
+    }
+
     companion object {
         fun createEmailProvider(member: MemberEntity, email: String) =
             AuthProviderEntity(
