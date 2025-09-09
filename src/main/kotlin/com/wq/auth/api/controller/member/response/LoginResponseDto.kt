@@ -1,12 +1,17 @@
 package com.wq.auth.api.controller.member.response
 
 data class LoginResponseDto(
-    val accessToken: String,
-    val refreshToken: String,
-    val expiredAt: Long
+    val accessToken: String?,
+    val refreshToken: String?,
+    val expiredAt: Long?,
+    val refreshExpiredAt: Long? = null
 ) {
     companion object {
-        fun fromTokens(accessToken: String, refreshToken: String, expiredAt: Long) =
-            LoginResponseDto(accessToken, refreshToken, expiredAt)
+        fun forWeb(accessToken: String, expiredAt: Long) =
+            LoginResponseDto(accessToken, null, expiredAt, null)
+
+        fun forApp(refreshToken: String, refreshExpiredAt: Long) =
+            LoginResponseDto(null, refreshToken, null, refreshExpiredAt)
     }
 }
+

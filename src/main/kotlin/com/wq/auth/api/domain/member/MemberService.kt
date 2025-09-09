@@ -1,6 +1,5 @@
 package com.wq.auth.api.domain.member
 
-import com.wq.auth.api.controller.member.response.LoginResponseDto
 import com.wq.auth.api.domain.email.AuthEmailService
 import com.wq.auth.api.domain.member.entity.AuthProviderEntity
 import com.wq.auth.api.domain.member.entity.MemberEntity
@@ -31,20 +30,21 @@ class MemberService(
     data class TokenResult(
         val accessToken: String,
         val refreshToken: String,
-        val accessTokenExpiredAt: Long
+        val accessTokenExpiredAt: Long,
+        val refreshTokenExpiredAt: Long
     )
 
     @Transactional
-    fun emailLogin(email: String): LoginResponseDto {
-        val existingUser = authProviderRepository.findByEmail(email)?.member ?: return signUp(email)
+    fun emailLogin(email: String, deviceId: String?, clientType: String): TokenResult {
+        val existingUser =
+            authProviderRepository.findByEmail(email)?.member ?: return signUp(email, deviceId, clientType)
 
-        //신규사용자
-        val opaqueId = existingUser.opaqueId
         // 이미 가입된 사용자 → 로그인 처리 및 JWT 발급
-        val accessToken = jwtProvider.createAccessToken(subject = existingUser.opaqueId)
-        //TODO
-        //다양한 디바이스 지원시 바뀌어야할지도
-        val existingRefreshToken = refreshTokenRepository.findByMember(existingUser)
+        val opaqueId = existingUser.opaqueId
+        val accessToken =
+            jwtProvider.createAccessToken(subject = existingUser.opaqueId, extraClaims = mapOf("deviceId" to deviceId))
+
+        val existingRefreshToken = refreshTokenRepository.findByMemberAndDeviceId(existingUser, deviceId)
 
         //이전 리프레시토큰 삭제
         if (existingRefreshToken != null) {
@@ -57,15 +57,20 @@ class MemberService(
         val accessTokenExpiredAt = now + jwtProperties.accessExp.toMillis()
         val refreshTokenExpiredAt = Instant.now().plus(jwtProperties.refreshExp)
 
-        val refreshTokenEntity = RefreshTokenEntity.of(existingUser, jti, refreshTokenExpiredAt, opaqueId)
+        val refreshTokenEntity: RefreshTokenEntity
+        if (clientType == "app") {
+            refreshTokenEntity = RefreshTokenEntity.ofApp(existingUser, jti, refreshTokenExpiredAt, opaqueId, deviceId!!)
+        } else {
+            refreshTokenEntity = RefreshTokenEntity.ofWeb(existingUser, jti, refreshTokenExpiredAt, opaqueId)
+        }
         refreshTokenRepository.save(refreshTokenEntity)
 
-        return LoginResponseDto.fromTokens(accessToken, refreshToken, accessTokenExpiredAt)
+        return TokenResult(accessToken, refreshToken, accessTokenExpiredAt, refreshTokenExpiredAt.toEpochMilli())
 
     }
 
     @Transactional
-    fun signUp(email: String): LoginResponseDto {
+    fun signUp(email: String, deviceId: String?, clientType: String): TokenResult {
 
         authEmailService.validateEmailFormat(email)
 
@@ -85,17 +90,22 @@ class MemberService(
             throw MemberException(MemberExceptionCode.DATABASE_SAVE_FAILED, ex)
         }
 
-        val accessToken = jwtProvider.createAccessToken(subject = member.opaqueId)
+        val accessToken = jwtProvider.createAccessToken(subject = member.opaqueId, extraClaims = mapOf("deviceId" to deviceId))
         val (refreshToken, jti) = jwtProvider.createRefreshToken(subject = member.opaqueId)
 
         val now = System.currentTimeMillis()
         val accessTokenExpiredAt = now + jwtProperties.accessExp.toMillis()
         val refreshTokenExpiredAt = Instant.now().plus(jwtProperties.refreshExp)
 
-        val refreshTokenEntity = RefreshTokenEntity.of(member, jti, refreshTokenExpiredAt, opaqueId)
+        val refreshTokenEntity: RefreshTokenEntity
+        if (clientType == "app") {
+            refreshTokenEntity = RefreshTokenEntity.ofApp(member, jti, refreshTokenExpiredAt, opaqueId, deviceId!!)
+        } else {
+            refreshTokenEntity = RefreshTokenEntity.ofWeb(member, jti, refreshTokenExpiredAt, opaqueId)
+        }
         refreshTokenRepository.save(refreshTokenEntity)
 
-        return LoginResponseDto.fromTokens(accessToken, refreshToken, accessTokenExpiredAt)
+        return TokenResult(accessToken, refreshToken, accessTokenExpiredAt, refreshTokenExpiredAt.toEpochMilli())
     }
 
     @Transactional
@@ -103,14 +113,17 @@ class MemberService(
         try {
             val opaqueId = jwtProvider.getSubject(refreshToken)
             val jti = jwtProvider.getJti(refreshToken)
+            //Jti 자체가 고유한 값이어서 deviceId 안넣음
             refreshTokenRepository.deleteByOpaqueIdAndJti(opaqueId, jti)
         } catch (ex: Exception) {
             throw MemberException(MemberExceptionCode.LOGOUT_FAILED, ex)
         }
     }
 
+    //TODO
+    //모바일 재발급의 경우
     @Transactional
-    fun refreshAccessToken(refreshToken: String): TokenResult {
+    fun refreshAccessToken(refreshToken: String, deviceId: String?, clientType: String): TokenResult {
         //토큰 유효성 검사
         jwtProvider.validateOrThrow(refreshToken)
 
@@ -128,7 +141,7 @@ class MemberService(
         }
 
         // 5. AccessToken, RefreshToken 재발급
-        val newAccessToken = jwtProvider.createAccessToken(subject = opaqueId)
+        val newAccessToken = jwtProvider.createAccessToken(subject = opaqueId, extraClaims = mapOf("deviceId" to deviceId))
         val (newRefreshToken, newJti) = jwtProvider.createRefreshToken(subject = opaqueId)
 
         // 기존 RefreshToken 삭제
@@ -139,10 +152,15 @@ class MemberService(
         val refreshTokenExpiredAt = Instant.now().plus(jwtProperties.refreshExp)
         val member = memberRepository.findByOpaqueId(opaqueId).get()
 
-        val newRefreshTokenEntity = RefreshTokenEntity.of(member, newJti, refreshTokenExpiredAt, opaqueId)
+        val newRefreshTokenEntity: RefreshTokenEntity
+        if (clientType == "app") {
+            newRefreshTokenEntity = RefreshTokenEntity.ofApp(member, newJti, refreshTokenExpiredAt, opaqueId, deviceId!!)
+        } else {
+            newRefreshTokenEntity = RefreshTokenEntity.ofWeb(member, newJti, refreshTokenExpiredAt, opaqueId)
+        }
         refreshTokenRepository.save(newRefreshTokenEntity)
 
-        return TokenResult(newAccessToken, newRefreshToken, accessTokenExpiredAt)
+        return TokenResult(newAccessToken, newRefreshToken, accessTokenExpiredAt, refreshTokenExpiredAt.toEpochMilli())
     }
 
     fun getAll(): List<MemberEntity> = memberRepository.findAll()

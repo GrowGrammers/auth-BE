@@ -3,6 +3,7 @@ package com.wq.auth.api.controller.member
 import com.wq.auth.api.controller.member.request.EmailLoginRequestDto
 import com.wq.auth.api.controller.member.request.LogoutRequestDto
 import com.wq.auth.api.controller.member.request.RefreshAccessTokenRequestDto
+import com.wq.auth.api.controller.member.response.LoginResponseDto
 import com.wq.auth.api.controller.member.response.RefreshAccessTokenResponseDto
 import com.wq.auth.web.common.response.BaseResponse
 import com.wq.auth.web.common.response.FailResponse
@@ -16,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 
 @Tag(name = "회원", description = "로그인, 로그아웃 등 회원 관련 API")
 interface MemberApiDocs {
@@ -44,8 +46,13 @@ interface MemberApiDocs {
             )
         ]
     )
-    fun emailLogin(@RequestBody req: EmailLoginRequestDto): BaseResponse
- @Operation(
+    fun emailLogin(
+        response: HttpServletResponse,
+        @RequestHeader("X-Client-Type") clientType: String,
+        @RequestBody req: EmailLoginRequestDto
+    ): SuccessResponse<LoginResponseDto>
+
+    @Operation(
         summary = "로그아웃",
         description = "RefreshToken을 DB에서 삭제하여 로그아웃합니다."
     )
@@ -64,7 +71,14 @@ interface MemberApiDocs {
             )
         ]
     )
-    fun logout(@RequestBody req: LogoutRequestDto): BaseResponse
+
+    fun logout(
+        @CookieValue(name = "refreshToken", required = true) refreshToken: String?,
+        response: HttpServletResponse,
+        @RequestHeader(name = "AccessToken", required = false) accessToken: String?,
+        @RequestHeader(name = "X-Client-Type", required = true) clientType: String,
+        @RequestBody req: LogoutRequestDto
+    ): SuccessResponse<Void?>
 
     @Operation(
         summary = "액세스 토큰 재발급",
@@ -108,6 +122,8 @@ interface MemberApiDocs {
     )
     fun refreshAccessToken(
         @CookieValue(name = "refreshToken", required = true) refreshToken: String,
+        @RequestHeader("X-Client-Type") clientType: String,
         response: HttpServletResponse,
-        @RequestBody req: RefreshAccessTokenRequestDto): BaseResponse
+        @RequestBody req: RefreshAccessTokenRequestDto
+    ): SuccessResponse<RefreshAccessTokenResponseDto>
 }

@@ -16,6 +16,11 @@ interface RefreshTokenRepository : JpaRepository<RefreshTokenEntity, Long> {
     @Query("delete from RefreshTokenEntity r where r.member.opaqueId = :opaqueId and r.jti = :jti")
     fun deleteByOpaqueIdAndJti(opaqueId: String, jti: String)
 
+    fun findByMemberAndDeviceId(member: MemberEntity, deviceId: String?): RefreshTokenEntity?
+
     @Query("select r from RefreshTokenEntity r where r.member.opaqueId = :opaqueId and r.jti = :jti")
     fun findByOpaqueIdAndJti(opaqueId: String, jti: String): RefreshTokenEntity?
+
+    @Query("select r from RefreshTokenEntity r where r.member.opaqueId = :opaqueId and r.jti = :jti and r.deviceId = :deviceId")
+    fun findByOpaqueIdAndJtiAndDeviceId(opaqueId: String, jti: String, deviceId: String?): RefreshTokenEntity?
 }
