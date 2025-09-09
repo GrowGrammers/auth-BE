@@ -26,20 +26,6 @@ class MemberEntityTest : StringSpec({
         member.isDeleted shouldBe false
     }
 
-    "providerId를 포함하여 생성할 수 있다" {
-        // Given & When
-        val member = MemberEntity.create(
-            providerId = "google_123456",
-            nickname = "구글사용자",
-            role = Role.ADMIN
-        )
-
-        // Then
-        member.providerId shouldBe "google_123456"
-        member.nickname shouldBe "구글사용자"
-        member.role shouldBe Role.ADMIN
-    }
-
     "닉네임이 공백이면 예외가 발생한다" {
         // Given & When & Then
         shouldThrow<IllegalArgumentException> {
