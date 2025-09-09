@@ -36,7 +36,7 @@ class GoogleOAuthService(
      * @return Google 액세스 토큰
      * @throws SocialLoginException 토큰 획득 실패 시
      */
-    fun getAccessToken(authorizationCode: String, redirectUri: String? = null): String {
+    fun getAccessToken(authorizationCode: String, codeVerifier: String, redirectUri: String? = null): String {
         log.info { "Google 액세스 토큰 요청 시작" }
         log.info { "redirectUri: "+ googleOAuthProperties.redirectUri }
         
@@ -49,6 +49,7 @@ class GoogleOAuthService(
             add("client_secret", googleOAuthProperties.clientSecret)
             add("code", authorizationCode)
             add("grant_type", "authorization_code")
+            add("code_verifier", codeVerifier)
             add("redirect_uri", redirectUri ?: googleOAuthProperties.redirectUri)
         }
         
@@ -146,8 +147,8 @@ class GoogleOAuthService(
      * @param redirectUri 리다이렉트 URI (선택사항)
      * @return Google 사용자 정보
      */
-    fun getUserInfoFromAuthCode(authorizationCode: String, redirectUri: String? = null): GoogleUserInfoDto {
-        val accessToken = getAccessToken(authorizationCode, redirectUri)
+    fun getUserInfoFromAuthCode(authorizationCode: String, codeVerifier: String, redirectUri: String? = null): GoogleUserInfoDto {
+        val accessToken = getAccessToken(authorizationCode, codeVerifier, redirectUri)
         return getUserInfo(accessToken)
     }
 }
