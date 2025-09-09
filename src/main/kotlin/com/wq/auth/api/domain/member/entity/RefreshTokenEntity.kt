@@ -23,14 +23,28 @@ class RefreshTokenEntity(
     @Column(name = "opaque_id", nullable = false, length = 64)
     val opaqueId: String,
 
-    )  : BaseEntity() {
+    @Column(name = "device_id", nullable = true, length = 64)
+    val deviceId: String? = null // 웹이면 null, 앱이면 UUID
+
+)  : BaseEntity() {
     companion object {
-        fun of(member: MemberEntity, jti: String, expiredAt: Instant, opaqueId: String): RefreshTokenEntity {
+        fun ofWeb(member: MemberEntity, jti: String, expiredAt: Instant, opaqueId: String): RefreshTokenEntity {
             return RefreshTokenEntity(
                 member = member,
                 jti = jti,
                 expiredAt = expiredAt,
-                opaqueId = opaqueId
+                opaqueId = opaqueId,
+                deviceId = null
+            )
+        }
+
+        fun ofApp(member: MemberEntity, jti: String, expiredAt: Instant, opaqueId: String, deviceId: String): RefreshTokenEntity {
+            return RefreshTokenEntity(
+                member = member,
+                jti = jti,
+                expiredAt = expiredAt,
+                opaqueId = opaqueId,
+                deviceId = deviceId
             )
         }
     }
