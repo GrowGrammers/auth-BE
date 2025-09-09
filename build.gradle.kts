@@ -38,6 +38,11 @@ dependencies {
 	runtimeOnly("com.h2database:h2")
 	implementation("org.springframework.boot:spring-boot-starter-logging")
 	implementation("io.github.oshai:kotlin-logging-jvm:5.1.4")
+	
+	// oauth
+	implementation("com.google.api-client:google-api-client:2.7.0")
+	implementation("com.google.oauth-client:google-oauth-client-jetty:1.36.0")
+	implementation("com.google.apis:google-api-services-oauth2:v2-rev20200213-2.0.0")
 
 	// test
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
