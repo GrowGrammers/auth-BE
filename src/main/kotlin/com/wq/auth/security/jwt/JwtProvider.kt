@@ -23,19 +23,6 @@ class JwtProvider(
         Decoders.BASE64.decode(jwtProperties.secret)
     )
 
-    /**
-     * AccessToken을 발급합니다.
-     *
-     * @param opaqueId 사용자의 UUID (opaque identifier)
-     * @param role 사용자 역할 (MEMBER, ADMIN)
-     * @return 생성된 JWT AccessToken 문자열
-     *
-     * 토큰 구조:
-     * - sub : opaqueId (UUID)
-     * - iat : 발급 시각
-     * - exp : 만료 시각
-     * - role : 사용자 역할
-     */
     fun createAccessToken(
         opaqueId: String,
         role: Role
@@ -52,16 +39,28 @@ class JwtProvider(
             .compact()
     }
 
-    /**
-     * RefreshToken을 발급합니다.
-     *
-     * @param opaqueId 사용자의 UUID (opaque identifier)
-     * @param jti 토큰 고유 식별자 (재발급/회전 시 검증용, 기본값: 랜덤 UUID)
-     * @return 생성된 JWT RefreshToken 문자열
-     *
-     * RefreshToken은 role 정보가 필요하지 않으므로 opaqueId와 만료시간만 포함합니다.
-     * DB에 jti를 저장해두고 재사용 방지 로직을 구현할 수 있습니다.
-     */
+    fun createAccessToken(
+        opaqueId: String,
+        role: Role,
+        extraClaims: Map<String, Any>
+    ): String {
+        val now = Instant.now()
+        val exp = Date.from(now.plus(jwtProperties.accessExp))
+
+        return Jwts.builder()
+            .subject(opaqueId)
+            .issuedAt(Date.from(now))
+            .expiration(exp)
+            .claim("role", role.toString())
+            .apply {
+                extraClaims.forEach { (key, value) ->
+                    claim(key, value)
+                }
+            }
+            .signWith(key, Jwts.SIG.HS256)
+            .compact()
+    }
+
     fun createRefreshToken(
         opaqueId: String,
         jti: String = UUID.randomUUID().toString()
