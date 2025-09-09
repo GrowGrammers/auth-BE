@@ -1,5 +1,6 @@
 package com.wq.auth.api.controller.auth.request
 
+import com.wq.auth.domain.auth.request.GoogleSocialLoginRequest
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank
 
@@ -20,3 +21,5 @@ data class GoogleSocialLoginRequestDto(
     val redirectUri: String? = null
 )
 
+fun GoogleSocialLoginRequestDto.toDomain(): GoogleSocialLoginRequest =
+    GoogleSocialLoginRequest(authCode, codeVerifier, redirectUri)

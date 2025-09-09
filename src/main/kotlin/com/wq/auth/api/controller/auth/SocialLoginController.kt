@@ -2,12 +2,12 @@ package com.wq.auth.api.controller.auth
 
 import com.wq.auth.api.controller.auth.request.GoogleSocialLoginRequestDto
 import com.wq.auth.api.controller.auth.request.SocialLoginRequestDto
+import com.wq.auth.api.controller.auth.request.toDomain
 import com.wq.auth.api.domain.member.entity.ProviderType
 import com.wq.auth.domain.auth.SocialLoginService
 import com.wq.auth.security.annotation.PublicApi
 import com.wq.auth.web.common.response.Responses
 import com.wq.auth.web.common.response.SuccessResponse
-import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Value
@@ -27,14 +27,13 @@ import java.time.Duration
 class SocialLoginController(
     private val socialLoginService: SocialLoginService,
 
-    @param:Value($$"${app.cookie.secure:false}")
+    @Value("\${app.cookie.secure:false}")
     private val cookieSecure: Boolean,
 
-    @param:Value($$"${app.cookie.same-site:Strict}")
+    @Value("\${app.cookie.same-site:Strict}")
     private val cookieSameSite: String
 ) : SocialLoginControllerDocs {
 
-    private val log = KotlinLogging.logger {}
     /**
      * 범용 소셜 로그인 처리
      * 
@@ -50,7 +49,7 @@ class SocialLoginController(
         @Valid @RequestBody request: SocialLoginRequestDto,
         response: HttpServletResponse
     ): SuccessResponse<Void> {
-        val loginResult = socialLoginService.processSocialLogin(request)
+        val loginResult = socialLoginService.processSocialLogin(request.toDomain())
         
         // RefreshToken을 HttpOnly 쿠키에 설정
         setRefreshTokenCookie(response, loginResult.refreshToken)
@@ -63,8 +62,11 @@ class SocialLoginController(
 
     /**
      * Google 소셜 로그인 (편의 메서드)
+     * 
      * Google 전용 엔드포인트로, providerType을 별도로 지정하지 않아도 됩니다.
-     *
+     * 
+     * @param authorizationCode Google 인가 코드
+     * @param redirectUri 리다이렉트 URI (선택사항)
      * @return JWT 토큰과 사용자 정보가 포함된 응답
      */
     @PublicApi("Google 소셜 로그인")
@@ -73,15 +75,13 @@ class SocialLoginController(
         @Valid @RequestBody request: GoogleSocialLoginRequestDto,
         response: HttpServletResponse
     ): SuccessResponse<Void> {
-        log.info { "구글 소셜로그인 요청" }
         val serviceRequest = SocialLoginRequestDto(
             authCode = request.authCode,
             codeVerifier = request.codeVerifier,
             providerType = ProviderType.GOOGLE,
-            redirectUri = request.redirectUri
         )
         
-        val loginResult = socialLoginService.processSocialLogin(serviceRequest)
+        val loginResult = socialLoginService.processSocialLogin(serviceRequest.toDomain())
         
         // RefreshToken을 HttpOnly 쿠키에 설정
         setRefreshTokenCookie(response, loginResult.refreshToken)

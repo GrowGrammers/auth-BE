@@ -1,12 +1,12 @@
 package com.wq.auth.domain.auth
 
-import com.wq.auth.api.controller.auth.request.SocialLoginRequestDto
 import com.wq.auth.api.domain.member.AuthProviderRepository
 import com.wq.auth.api.domain.member.MemberRepository
 import com.wq.auth.api.domain.member.entity.AuthProviderEntity
 import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.member.entity.ProviderType
 import com.wq.auth.api.controller.oauth.dto.GoogleUserInfoDto
+import com.wq.auth.domain.auth.request.SocialLoginRequest
 import com.wq.auth.domain.auth.response.SocialLoginResult
 import com.wq.auth.domain.oauth.GoogleOAuthService
 import com.wq.auth.domain.oauth.error.SocialLoginException
@@ -43,7 +43,7 @@ class SocialLoginService(
      * @return 소셜 로그인 응답 DTO (JWT 토큰 포함)
      */
     @Transactional
-    fun processSocialLogin(request: SocialLoginRequestDto): SocialLoginResult {
+    fun processSocialLogin(request: SocialLoginRequest): SocialLoginResult {
         log.info { "소셜 로그인 처리 시작: ${request.providerType}" }
 
         return when (request.providerType) {
@@ -57,12 +57,13 @@ class SocialLoginService(
     /**
      * Google 소셜 로그인을 처리합니다.
      */
-    private fun processGoogleLogin(request: SocialLoginRequestDto): SocialLoginResult {
+    private fun processGoogleLogin(request: SocialLoginRequest): SocialLoginResult {
         log.info { "Google 소셜 로그인 처리 시작" }
 
         // 1. Google에서 사용자 정보 조회
         val googleUserInfo = googleOAuthService.getUserInfoFromAuthCode(
             request.authCode,
+            request.codeVerifier,
             request.redirectUri
         )
 
