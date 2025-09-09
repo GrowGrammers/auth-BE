@@ -30,9 +30,12 @@ open class MemberEntity(
     open var isDeleted: Boolean = false,
 
     @Column(name = "opaque_id", nullable = false, unique = true, updatable = false, length = 64)
-    open val opaqueId: String = UUID.randomUUID().toString()
+    open val opaqueId: String = UUID.randomUUID().toString(),
 
-    ) : BaseEntity() {
+    @Column(name = "phone_number", length = 20, unique = true)
+    open var phoneNumber: String? = null
+
+) : BaseEntity() {
     companion object {
         fun createEmailVerifiedMember(nickname: String) =
             MemberEntity(
