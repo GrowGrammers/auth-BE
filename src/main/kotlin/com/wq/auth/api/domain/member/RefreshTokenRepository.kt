@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.transaction.annotation.Transactional
 
 interface RefreshTokenRepository : JpaRepository<RefreshTokenEntity, Long> {
-    fun findByJti(jti: String): RefreshTokenEntity?
     fun findByMember(member: MemberEntity): RefreshTokenEntity?
 
     @Transactional
@@ -21,6 +20,4 @@ interface RefreshTokenRepository : JpaRepository<RefreshTokenEntity, Long> {
     @Query("select r from RefreshTokenEntity r where r.member.opaqueId = :opaqueId and r.jti = :jti")
     fun findByOpaqueIdAndJti(opaqueId: String, jti: String): RefreshTokenEntity?
 
-    @Query("select r from RefreshTokenEntity r where r.member.opaqueId = :opaqueId and r.jti = :jti and r.deviceId = :deviceId")
-    fun findByOpaqueIdAndJtiAndDeviceId(opaqueId: String, jti: String, deviceId: String?): RefreshTokenEntity?
 }
