@@ -45,7 +45,7 @@ class MemberController(
                 .path("/")
                 .maxAge(jwtProperties.refreshExp.toSeconds())
                 //.sameSite("Strict") 배포시
-                .sameSite("None")
+                .sameSite("Lax")
                 .build()
             response.addHeader("Set-Cookie", refreshCookie.toString())
 
@@ -92,7 +92,7 @@ class MemberController(
                 .path("/")
                 .maxAge(0)
                 //.sameSite("Strict") 배포시
-                .sameSite("None")
+                .sameSite("Lax")
                 .build()
             response.addHeader("Set-Cookie", refreshCookie.toString())
 
@@ -127,7 +127,7 @@ class MemberController(
                 .path("/")
                 .maxAge(jwtProperties.refreshExp.toSeconds())
                 //.sameSite("Strict") 배포시
-                .sameSite("None")
+                .sameSite("Lax")
                 .build()
             response.addHeader("Set-Cookie", refreshCookie.toString())
 
