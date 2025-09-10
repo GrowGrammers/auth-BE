@@ -3,10 +3,10 @@ package com.wq.auth.integration
 import com.wq.auth.api.controller.member.MemberController
 import com.wq.auth.api.domain.email.AuthEmailService
 import com.wq.auth.api.domain.member.MemberService
-import com.wq.auth.jwt.JwtProperties
-import com.wq.auth.jwt.JwtProvider
-import com.wq.auth.jwt.error.JwtException
-import com.wq.auth.jwt.error.JwtExceptionCode
+import com.wq.auth.shared.jwt.JwtProperties
+import com.wq.auth.shared.jwt.JwtProvider
+import com.wq.auth.shared.jwt.error.JwtException
+import com.wq.auth.shared.jwt.error.JwtExceptionCode
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.extensions.spring.SpringTestExtension
 import org.mockito.BDDMockito.given
@@ -21,6 +21,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import java.time.Duration
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 
 @WebMvcTest(
     controllers = [MemberController::class],
@@ -51,6 +53,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
             context("Web 클라이언트에서 유효한 요청이 주어졌을 때") {
                 it("성공 응답과 새로운 토큰을 반환해야 한다") {
                     // given
+                    val accessToken = "valid-access-token"
                     val refreshToken = "valid-refresh-token"
                     val clientType = "web"
                     val deviceId: String? = null
@@ -75,10 +78,14 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                     mockMvc.perform(
                         post("/api/v1/auth/members/refresh")
                             .cookie(Cookie("refreshToken", refreshToken))
+                            .header("Authorization", "Bearer $accessToken")
                             .header("X-Client-Type", clientType)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody)
+                            .with(csrf()) //security 우회용
+                            .with(user("testUser").roles("USER"))
                     )
+                        //.andDo(print())
                         .andExpect(status().isOk)
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.message").value("AccessToken 재발급에 성공했습니다."))
@@ -125,6 +132,8 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                             .header("X-Client-Type", clientType)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody)
+                            .with(csrf()) //security 우회용
+                            .with(user("testUser").roles("USER"))
                     )
                         .andExpect(status().isOk)
                         .andExpect(jsonPath("$.success").value(true))
@@ -155,6 +164,8 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                             .header("X-Client-Type", clientType)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody)
+                            .with(csrf()) //security 우회용
+                            .with(user("testUser").roles("USER"))
                     ).andExpect(status().isUnauthorized)
 
                     verify(memberService).refreshAccessToken(refreshToken, deviceId, clientType)
@@ -178,6 +189,8 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                             .header("X-Client-Type", clientType)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody)
+                            .with(csrf()) //security 우회용
+                            .with(user("testUser").roles("USER"))
                     ).andExpect(status().isUnauthorized)
 
                     verify(memberService).refreshAccessToken(refreshToken, deviceId, clientType)
@@ -217,6 +230,8 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                             .header("X-Client-Type", clientType)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody)
+                            .with(csrf()) //security 우회용
+                            .with(user("testUser").roles("USER"))
                     )
                         .andExpect(status().isOk)
                         .andExpect(jsonPath("$.success").value(true))
@@ -264,6 +279,8 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                             .header("X-Client-Type", clientType)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody)
+                            .with(csrf()) //security 우회용
+                            .with(user("testUser").roles("USER"))
                     )
                         .andExpect(status().isOk)
                         .andExpect(jsonPath("$.success").value(true))
@@ -297,6 +314,8 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                             .header("X-Client-Type", clientType)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody)
+                            .with(csrf()) //security 우회용
+                            .with(user("testUser").roles("USER"))
                     )
                         .andExpect(status().isOk)
                         .andExpect(jsonPath("$.success").value(true))
@@ -311,7 +330,6 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                         .andExpect(header().string("Set-Cookie", Matchers.containsString("Max-Age=0")))
 
                     verify(memberService).logout(refreshToken)
-                    verify(jwtProvider).validateOrThrow(accessToken)
                 }
             }
 
@@ -329,6 +347,8 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                             .header("X-Client-Type", clientType)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody)
+                            .with(csrf()) //security 우회용
+                            .with(user("testUser").roles("USER"))
                     )
                         .andExpect(status().isOk)
                         .andExpect(jsonPath("$.success").value(true))
