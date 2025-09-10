@@ -8,8 +8,8 @@ import com.wq.auth.api.controller.member.response.RefreshAccessTokenResponseDto
 import com.wq.auth.api.domain.email.AuthEmailService
 import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.member.MemberService
-import com.wq.auth.jwt.JwtProperties
-import com.wq.auth.jwt.JwtProvider
+import com.wq.auth.shared.jwt.JwtProperties
+import com.wq.auth.shared.jwt.JwtProvider
 import com.wq.auth.web.common.response.Responses
 import com.wq.auth.web.common.response.SuccessResponse
 import jakarta.servlet.http.HttpServletResponse
@@ -69,7 +69,7 @@ class MemberController(
     override fun logout(
         @CookieValue(name = "refreshToken", required = true) refreshToken: String?,
         response: HttpServletResponse,
-        @RequestHeader(name = "AccessToken", required = false) accessToken: String?,
+        @RequestHeader(name = "Authorization", required = false) accessToken: String?,
         @RequestHeader(name = "X-Client-Type", required = true) clientType: String,
         @RequestBody req: LogoutRequestDto
     ): SuccessResponse<Void?> {
@@ -83,8 +83,6 @@ class MemberController(
         memberService.logout(currentRefreshToken!!)
 
         if (clientType == "web") {
-            jwtProvider.validateOrThrow(accessToken!!)
-
             val refreshCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 //.secure(true) 배포시
