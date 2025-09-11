@@ -1,6 +1,6 @@
 package com.wq.auth.unit
 
-import com.wq.auth.shared.jwt.JwtProperties
+import com.wq.auth.security.jwt.JwtProperties
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.shouldBe

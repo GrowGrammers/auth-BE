@@ -2,7 +2,7 @@ package com.wq.auth.web.common
 
 import com.wq.auth.shared.error.ApiException
 import com.wq.auth.shared.error.CommonExceptionCode
-import com.wq.auth.shared.jwt.error.JwtExceptionCode
+import com.wq.auth.security.jwt.error.JwtExceptionCode
 import com.wq.auth.web.common.response.FailResponse
 import com.wq.auth.web.common.response.Responses
 import org.slf4j.Logger

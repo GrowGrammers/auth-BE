@@ -1,4 +1,4 @@
-package com.wq.auth.shared.security.annotation
+package com.wq.auth.security.annotation
 
 import org.springframework.security.access.prepost.PreAuthorize
 

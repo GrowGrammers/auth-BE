@@ -1,9 +1,9 @@
-package com.wq.auth.shared.security
+package com.wq.auth.security
 
 import com.wq.auth.api.domain.member.entity.Role
-import com.wq.auth.shared.jwt.JwtProvider
-import com.wq.auth.shared.jwt.error.JwtException
-import com.wq.auth.shared.security.principal.PrincipalDetails
+import com.wq.auth.security.jwt.JwtProvider
+import com.wq.auth.security.jwt.error.JwtException
+import com.wq.auth.security.principal.PrincipalDetails
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -36,6 +36,10 @@ class JwtAuthenticationFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
+
+        val httpReq = request as HttpServletRequest
+        println("Request URI: ${httpReq.requestURI}")
+
         try {
             // Authorization 헤더에서 JWT 토큰 추출
             val token = extractTokenFromRequest(request)

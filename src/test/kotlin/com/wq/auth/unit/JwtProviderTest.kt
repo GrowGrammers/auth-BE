@@ -1,10 +1,10 @@
 package com.wq.auth.unit
 
 import com.wq.auth.api.domain.member.entity.Role
-import com.wq.auth.shared.jwt.JwtProperties
-import com.wq.auth.shared.jwt.JwtProvider
-import com.wq.auth.shared.jwt.error.JwtException
-import com.wq.auth.shared.jwt.error.JwtExceptionCode
+import com.wq.auth.security.jwt.JwtProperties
+import com.wq.auth.security.jwt.JwtProvider
+import com.wq.auth.security.jwt.error.JwtException
+import com.wq.auth.security.jwt.error.JwtExceptionCode
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.io.Encoders

@@ -1,4 +1,4 @@
-package com.wq.auth.shared.security.principal
+package com.wq.auth.security.principal
 
 import com.wq.auth.api.domain.member.entity.Role
 import org.springframework.security.core.GrantedAuthority

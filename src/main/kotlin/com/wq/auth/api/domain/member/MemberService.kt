@@ -7,14 +7,15 @@ import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.member.entity.RefreshTokenEntity
 import com.wq.auth.api.domain.member.error.MemberException
 import com.wq.auth.api.domain.member.error.MemberExceptionCode
-import com.wq.auth.shared.jwt.JwtProperties
-import com.wq.auth.shared.jwt.JwtProvider
-import com.wq.auth.shared.jwt.error.JwtException
-import com.wq.auth.shared.jwt.error.JwtExceptionCode
+import com.wq.auth.security.jwt.JwtProperties
+import com.wq.auth.security.jwt.JwtProvider
+import com.wq.auth.security.jwt.error.JwtException
+import com.wq.auth.security.jwt.error.JwtExceptionCode
 import com.wq.auth.shared.utils.NicknameGenerator
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
+import java.util.*
 
 @Service
 class MemberService(
@@ -33,13 +34,13 @@ class MemberService(
         val refreshToken: String,
         val accessTokenExpiredAt: Long
     )
-
+    
     @Transactional
     fun emailLogin(email: String): LoginResponseDto {
         val existingUser = authProviderRepository.findByEmail(email)?.member
         // 이미 가입된 사용자 → 로그인 처리 및 JWT 발급
         return if (existingUser != null) {
-            val accessToken = jwtProvider.createAccessTokenDeprecated(subject = existingUser.id.toString())
+            val accessToken = jwtProvider.createAccessToken(existingUser.opaqueId, existingUser.role)
             val existingRefreshToken = refreshTokenRepository.findByMember(existingUser)
 
             //이전 리프레시토큰 삭제
@@ -47,7 +48,8 @@ class MemberService(
                 refreshTokenRepository.delete(existingRefreshToken)
             }
 
-            val (refreshToken, jti) = jwtProvider.createRefreshTokenDeprecated(subject = existingUser.id.toString())
+            val jti = UUID.randomUUID().toString()
+            val refreshToken = jwtProvider.createRefreshToken(existingUser.opaqueId, jti)
 
             val now = System.currentTimeMillis()
             val accessTokenExpiredAt = now + jwtProperties.accessExp.toMillis()
@@ -83,8 +85,9 @@ class MemberService(
             throw MemberException(MemberExceptionCode.DATABASE_SAVE_FAILED, ex)
         }
 
-        val accessToken = jwtProvider.createAccessTokenDeprecated(subject = member.id.toString())
-        val (refreshToken, jti) = jwtProvider.createRefreshTokenDeprecated(subject = member.id.toString())
+        val accessToken = jwtProvider.createAccessToken(member.opaqueId, member.role)
+        val jti = UUID.randomUUID().toString()
+        val refreshToken = jwtProvider.createRefreshToken(member.opaqueId, jti)
 
         val now = System.currentTimeMillis()
         val accessTokenExpiredAt = now + jwtProperties.accessExp.toMillis()
@@ -99,9 +102,13 @@ class MemberService(
     @Transactional
     fun logout(refreshToken: String) {
         try {
-            val tokenMemberId = jwtProvider.getSubject(refreshToken).toLong()
-            val jti = jwtProvider.getJti(refreshToken)
-            refreshTokenRepository.deleteByMemberIdAndJti(tokenMemberId, jti)
+            val opaqueId = jwtProvider.getOpaqueId(refreshToken)
+            val claims = jwtProvider.getAllClaims(refreshToken)
+            val jti = claims["jti"] as String
+            val member = memberRepository.findByOpaqueId(opaqueId).orElseThrow { 
+                MemberException(MemberExceptionCode.LOGOUT_FAILED) 
+            }
+            refreshTokenRepository.deleteByMemberIdAndJti(member.id, jti)
         } catch (ex: Exception) {
             throw MemberException(MemberExceptionCode.LOGOUT_FAILED, ex)
         }
@@ -112,8 +119,13 @@ class MemberService(
         //토큰 유효성 검사
         jwtProvider.validateOrThrow(refreshToken)
 
-        val jti = jwtProvider.getJti(refreshToken)
-        val memberId = jwtProvider.getSubject(refreshToken).toLong()
+        val opaqueId = jwtProvider.getOpaqueId(refreshToken)
+        val claims = jwtProvider.getAllClaims(refreshToken)
+        val jti = claims["jti"] as String
+        val member = memberRepository.findByOpaqueId(opaqueId).orElseThrow { 
+            MemberException(MemberExceptionCode.REFRESHTOKEN_DATABASE_FIND_FAILED) 
+        }
+        val memberId = member.id
 
         //토큰 jti+memberId로 DB에 있는지 확인
         val refreshTokenEntity = refreshTokenRepository.findByMemberIdAndJti(memberId, jti)
@@ -126,8 +138,9 @@ class MemberService(
         }
 
         // 5. AccessToken, RefreshToken 재발급
-        val newAccessToken = jwtProvider.createAccessTokenDeprecated(subject = memberId.toString())
-        val (newRefreshToken, newJti) = jwtProvider.createRefreshTokenDeprecated(subject = memberId.toString())
+        val newAccessToken = jwtProvider.createAccessToken(member.opaqueId, member.role)
+        val newJti = UUID.randomUUID().toString()
+        val newRefreshToken = jwtProvider.createRefreshToken(member.opaqueId, newJti)
 
         // 기존 RefreshToken 삭제
         refreshTokenRepository.delete(refreshTokenEntity)
@@ -135,7 +148,7 @@ class MemberService(
         val now = System.currentTimeMillis()
         val accessTokenExpiredAt = now + jwtProperties.accessExp.toMillis()
         val refreshTokenExpiredAt = Instant.now().plus(jwtProperties.refreshExp)
-        val member = memberRepository.findById(memberId).get()
+        // member는 이미 위에서 조회함
 
         val newRefreshTokenEntity = RefreshTokenEntity.of(member, newJti, refreshTokenExpiredAt)
         refreshTokenRepository.save(newRefreshTokenEntity)

@@ -1,10 +1,10 @@
 package com.wq.auth.api.controller
 
 import com.wq.auth.api.domain.member.entity.Role
-import com.wq.auth.shared.jwt.JwtProvider
-import com.wq.auth.shared.security.annotation.AdminApi
-import com.wq.auth.shared.security.annotation.AuthenticatedApi
-import com.wq.auth.shared.security.annotation.PublicApi
+import com.wq.auth.security.jwt.JwtProvider
+import com.wq.auth.security.annotation.AdminApi
+import com.wq.auth.security.annotation.AuthenticatedApi
+import com.wq.auth.security.annotation.PublicApi
 import com.wq.auth.web.common.response.Responses
 import com.wq.auth.web.common.response.SuccessResponse
 import org.springframework.web.bind.annotation.GetMapping

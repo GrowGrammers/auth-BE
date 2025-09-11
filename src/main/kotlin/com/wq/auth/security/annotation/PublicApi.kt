@@ -1,4 +1,4 @@
-package com.wq.auth.shared.security.annotation
+package com.wq.auth.security.annotation
 
 /**
  * 인증이 필요하지 않은 공개 API에 사용하는 어노테이션

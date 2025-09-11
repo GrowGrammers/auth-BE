@@ -1,8 +1,7 @@
-package com.wq.auth.shared.security
+package com.wq.auth.security
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.wq.auth.shared.error.CommonExceptionCode
-import com.wq.auth.shared.jwt.error.JwtExceptionCode
+import com.wq.auth.security.jwt.error.JwtExceptionCode
 import com.wq.auth.web.common.response.Responses
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

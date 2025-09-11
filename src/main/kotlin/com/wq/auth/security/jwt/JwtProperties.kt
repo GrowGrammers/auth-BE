@@ -1,4 +1,4 @@
-package com.wq.auth.shared.jwt
+package com.wq.auth.security.jwt
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.time.Duration
