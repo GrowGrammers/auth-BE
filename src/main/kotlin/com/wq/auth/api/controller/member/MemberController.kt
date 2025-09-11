@@ -8,8 +8,7 @@ import com.wq.auth.api.controller.member.response.RefreshAccessTokenResponseDto
 import com.wq.auth.api.domain.email.AuthEmailService
 import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.member.MemberService
-import com.wq.auth.shared.jwt.JwtProperties
-import com.wq.auth.shared.jwt.JwtProvider
+import com.wq.auth.security.jwt.JwtProperties
 import com.wq.auth.web.common.response.Responses
 import com.wq.auth.web.common.response.SuccessResponse
 import jakarta.servlet.http.HttpServletResponse
@@ -21,7 +20,6 @@ class MemberController(
     private val memberService: MemberService,
     private val emailService: AuthEmailService,
     private val jwtProperties: JwtProperties,
-    private val jwtProvider: JwtProvider,
 ) : MemberApiDocs {
 
     @PostMapping("api/v1/auth/members/email-login")
@@ -145,25 +143,31 @@ class MemberController(
 
     }
 
-    @GetMapping("/members")
-    fun getAll(): List<MemberEntity> = memberService.getAll()
+    @GetMapping("/api/v1/members")
+    fun getAll(): SuccessResponse<List<MemberEntity>> =
+        Responses.success("회원 목록 조회 성공", memberService.getAll())
 
-    @GetMapping("/members/{id}")
-    fun getById(@PathVariable id: Long): MemberEntity? = memberService.getById(id)
+    @GetMapping("/api/v1/members/{id}")
+    fun getById(@PathVariable id: Long): SuccessResponse<MemberEntity?> =
+        Responses.success("회원 조회 성공", memberService.getById(id))
 
-    @PostMapping("/members")
-    fun create(@RequestBody member: MemberEntity): MemberEntity = memberService.create(member)
+    @PostMapping("/api/v1/members")
+    fun create(@RequestBody member: MemberEntity): SuccessResponse<MemberEntity> =
+        Responses.success("회원 생성 성공", memberService.create(member))
 
-    @DeleteMapping("/members/{id}")
-    fun delete(@PathVariable id: Long) = memberService.delete(id)
+    @DeleteMapping("/api/v1/members/{id}")
+    fun delete(@PathVariable id: Long): SuccessResponse<Void> {
+        memberService.delete(id)
+        return Responses.success("회원 삭제 성공")
+    }
 
-    @PutMapping("/members/{id}/nickname")
+    @PutMapping("/api/v1/members/{id}/nickname")
     fun updateNickname(
         @PathVariable id: Long,
         @RequestBody payload: Map<String, String>
-    ): MemberEntity? {
-        val newNickname = payload["nickname"] ?: return null
-        return memberService.updateNickname(id, newNickname)
+    ): SuccessResponse<MemberEntity?> {
+        val newNickname = payload["nickname"] ?: throw IllegalArgumentException("닉네임은 필수입니다")
+        return Responses.success("닉네임 변경 성공", memberService.updateNickname(id, newNickname))
     }
 
 }

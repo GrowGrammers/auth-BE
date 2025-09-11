@@ -1,4 +1,4 @@
-package com.wq.auth.jwt.error
+package com.wq.auth.security.jwt.error
 
 import com.wq.auth.shared.error.ApiResponseCode
 
@@ -10,10 +10,11 @@ enum class JwtExceptionCode (
     override val status: Int,
     override val message: String
 ) : ApiResponseCode {
-    TOKEN_MISSING(400, "인증 토큰이 없습니다."),
+    TOKEN_MISSING(401, "인증 토큰이 없습니다."),
     TOKEN_FORMAT_INVALID(400, "Authorization 헤더는 'Bearer <token>' 형식이어야 합니다."),
     INVALID_SIGNATURE(401, "유효하지 않은 JWT 서명입니다."),
     MALFORMED(401, "유효하지 않은 JWT 토큰입니다."),
     EXPIRED(401, "만료된 JWT 토큰입니다."),
-    UNSUPPORTED(401, "지원되지 않는 JWT 토큰입니다.");
+    UNSUPPORTED(401, "지원되지 않는 JWT 토큰입니다."),
+    FORBIDDEN(403, "해당 리소스에 접근할 권한이 없습니다.");
 }

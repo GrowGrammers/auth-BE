@@ -7,14 +7,15 @@ import com.wq.auth.api.domain.member.entity.RefreshTokenEntity
 import com.wq.auth.api.domain.member.entity.Role
 import com.wq.auth.api.domain.member.error.MemberException
 import com.wq.auth.api.domain.member.error.MemberExceptionCode
-import com.wq.auth.shared.jwt.JwtProperties
-import com.wq.auth.shared.jwt.JwtProvider
-import com.wq.auth.shared.jwt.error.JwtException
-import com.wq.auth.shared.jwt.error.JwtExceptionCode
+import com.wq.auth.security.jwt.JwtProperties
+import com.wq.auth.security.jwt.JwtProvider
+import com.wq.auth.security.jwt.error.JwtException
+import com.wq.auth.security.jwt.error.JwtExceptionCode
 import com.wq.auth.shared.utils.NicknameGenerator
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
+import java.util.*
 
 @Service
 class MemberService(
@@ -114,7 +115,7 @@ class MemberService(
     @Transactional
     fun logout(refreshToken: String) {
         try {
-            val opaqueId = jwtProvider.getSubject(refreshToken)
+            val opaqueId = jwtProvider.getOpaqueId(refreshToken)
             val jti = jwtProvider.getJti(refreshToken)
             //Jti 자체가 고유한 값이어서 deviceId 안넣음
             refreshTokenRepository.deleteByOpaqueIdAndJti(opaqueId, jti)
@@ -131,7 +132,7 @@ class MemberService(
         jwtProvider.validateOrThrow(refreshToken)
 
         val jti = jwtProvider.getJti(refreshToken)
-        val opaqueId = jwtProvider.getSubject(refreshToken)
+        val opaqueId = jwtProvider.getOpaqueId(refreshToken)
 
         //토큰 jti+opaqueId로 DB에 있는지 확인
         val refreshTokenEntity = refreshTokenRepository.findByOpaqueIdAndJti(opaqueId, jti)

@@ -2,12 +2,14 @@ package com.wq.auth.web.common
 
 import com.wq.auth.shared.error.ApiException
 import com.wq.auth.shared.error.CommonExceptionCode
+import com.wq.auth.security.jwt.error.JwtExceptionCode
 import com.wq.auth.web.common.response.FailResponse
 import com.wq.auth.web.common.response.Responses
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
@@ -24,6 +26,14 @@ class GlobalExceptionHandler {
         log.error(e.extractExceptionLocation() + e.message)
         val status = HttpStatus.valueOf(e.code.status)
         val body = Responses.fail(e.code)
+        return ResponseEntity.status(status).body(body)
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException::class)
+    fun handleAuthorizationDenied(e: AuthorizationDeniedException): ResponseEntity<FailResponse> {
+        log.warn("[권한 부족] ${e.message}")
+        val status = HttpStatus.FORBIDDEN
+        val body = Responses.fail(JwtExceptionCode.FORBIDDEN)
         return ResponseEntity.status(status).body(body)
     }
 

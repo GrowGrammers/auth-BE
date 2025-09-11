@@ -1,8 +1,8 @@
 package com.wq.auth.shared.config
 
-import com.wq.auth.shared.security.JwtAccessDeniedHandler
-import com.wq.auth.shared.security.JwtAuthenticationFilter
-import com.wq.auth.shared.security.JwtAuthenticationEntryPoint
+import com.wq.auth.security.JwtAccessDeniedHandler
+import com.wq.auth.security.JwtAuthenticationFilter
+import com.wq.auth.security.JwtAuthenticationEntryPoint
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
@@ -52,7 +52,11 @@ class SecurityConfig(
                         "api/v1/auth/members/email-login", // 이메일 로그인
                         "api/v1/auth/email/request", // 이메일 일증 코드 요청
                         "/api/public/**",         // 공개 API
-                        "/actuator/health"        // 헬스체크
+                        "/api/v1/auth/**", // 소셜 로그인 API
+                        "/actuator/health",       // 헬스체크
+                        "/swagger-ui/**",         // Swagger UI
+                        "/v3/api-docs/**",        // OpenAPI 문서
+                        "/h2-console/**"          // H2 콘솔 (개발용)
                     ).permitAll()
                     
                     // 나머지 모든 요청은 인증 필요 (세부 권한은 @PreAuthorize로 처리)

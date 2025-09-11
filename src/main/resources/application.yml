@@ -2,6 +2,7 @@ spring:
   profiles:
     active:
       - jwt
+      - oauth
 
   application:
     name: auth-BE
@@ -52,6 +53,9 @@ springdoc:
 app:
   time:
     default-zone: ${APP_DEFAULT_ZONE:Asia/Seoul} # 환경변수 APP_DEFAULT_ZONE이 있으면 그걸 쓰고, 없으면 Asia/Seoul
+  cookie:
+    secure: ${APP_COOKIE_SECURE:false} # 개발환경: false, 프로덕션: true (HTTPS)
+    same-site: ${APP_COOKIE_SAME_SITE:Strict} # CSRF 방지: Strict/Lax/None
 
 logging:
   level:

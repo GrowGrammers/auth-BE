@@ -13,6 +13,10 @@ import com.wq.auth.api.domain.member.RefreshTokenRepository
 import com.wq.auth.api.domain.member.entity.RefreshTokenEntity
 import com.wq.auth.api.domain.member.error.MemberException
 import com.wq.auth.api.domain.member.error.MemberExceptionCode
+import com.wq.auth.security.jwt.JwtProperties
+import com.wq.auth.security.jwt.JwtProvider
+import com.wq.auth.security.jwt.error.JwtException
+import com.wq.auth.security.jwt.error.JwtExceptionCode
 import com.wq.auth.shared.jwt.error.JwtException
 import com.wq.auth.shared.jwt.error.JwtExceptionCode
 import com.wq.auth.shared.utils.NicknameGenerator
@@ -53,8 +57,8 @@ class AuthMemberServiceTest : DescribeSpec({
             authProviderRepository = authProviderRepository,
             refreshTokenRepository = refreshTokenRepository,
             jwtProvider = jwtProvider,
+            jwtProperties = jwtProperties,
             nicknameGenerator = nicknameGenerator,
-            jwtProperties = jwtProperties
         )
     }
 
@@ -446,7 +450,6 @@ class AuthMemberServiceTest : DescribeSpec({
         verify(memberRepository).save(any<MemberEntity>())
         verify(authProviderRepository).save(any<AuthProviderEntity>())
     }
-
 
     describe("회원가입 테스트") {
 
