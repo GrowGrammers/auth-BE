@@ -1,16 +1,16 @@
 package com.wq.auth.unit
 
 import com.wq.auth.api.domain.email.AuthEmailService
-import com.wq.auth.api.domain.member.MemberService
-import com.wq.auth.api.domain.member.entity.AuthProviderEntity
+import com.wq.auth.api.domain.auth.entity.AuthProviderEntity
 import com.wq.auth.api.domain.member.entity.MemberEntity
-import com.wq.auth.api.domain.member.entity.ProviderType
-import com.wq.auth.api.domain.member.AuthProviderRepository
+import com.wq.auth.api.domain.auth.entity.ProviderType
+import com.wq.auth.api.domain.auth.AuthProviderRepository
+import com.wq.auth.api.domain.auth.AuthService
 import com.wq.auth.api.domain.member.MemberRepository
-import com.wq.auth.api.domain.member.RefreshTokenRepository
-import com.wq.auth.api.domain.member.entity.RefreshTokenEntity
-import com.wq.auth.api.domain.member.error.MemberException
-import com.wq.auth.api.domain.member.error.MemberExceptionCode
+import com.wq.auth.api.domain.auth.RefreshTokenRepository
+import com.wq.auth.api.domain.auth.entity.RefreshTokenEntity
+import com.wq.auth.api.domain.auth.error.AuthException
+import com.wq.auth.api.domain.auth.error.AuthExceptionCode
 import com.wq.auth.security.jwt.JwtProperties
 import com.wq.auth.security.jwt.JwtProvider
 import com.wq.auth.security.jwt.error.JwtException
@@ -27,9 +27,9 @@ import java.time.Instant
 import java.util.Optional
 
 @ActiveProfiles("test")
-class AuthMemberServiceTest : DescribeSpec({
+class AuthServiceTest : DescribeSpec({
 
-    lateinit var memberService: MemberService
+    lateinit var authService: AuthService
     lateinit var authEmailService: AuthEmailService
     lateinit var authProviderRepository: AuthProviderRepository
     lateinit var memberRepository: MemberRepository
@@ -47,7 +47,7 @@ class AuthMemberServiceTest : DescribeSpec({
         jwtProperties = mock()
         nicknameGenerator = mock()
 
-        memberService = MemberService(
+        authService = AuthService(
             authEmailService = authEmailService,
             memberRepository = memberRepository,
             authProviderRepository = authProviderRepository,
@@ -92,7 +92,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
 
             // when
-            val result = memberService.emailLogin(email, deviceId, clientType)
+            val result = authService.emailLogin(email, deviceId, clientType)
 
             // then
             result.accessToken shouldBe accessToken
@@ -140,7 +140,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock<RefreshTokenEntity>())
 
             // when
-            val result = memberService.refreshAccessToken(refreshToken, deviceId, clientType)
+            val result = authService.refreshAccessToken(refreshToken, deviceId, clientType)
 
             // then
             result.accessToken shouldBe newAccessToken
@@ -168,7 +168,7 @@ class AuthMemberServiceTest : DescribeSpec({
             )
 
             shouldThrow<JwtException> {
-                memberService.refreshAccessToken(invalidRefreshToken, deviceId, clientType)
+                authService.refreshAccessToken(invalidRefreshToken, deviceId, clientType)
             }
 
             verify(jwtProvider, times(1)).validateOrThrow(invalidRefreshToken)
@@ -187,9 +187,9 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(jwtProvider.getOpaqueId(refreshToken)).thenReturn(opaqueId)
             whenever(refreshTokenRepository.findByOpaqueIdAndJti(opaqueId, jti)).thenReturn(null)
 
-            shouldThrow<MemberException> {
-                memberService.refreshAccessToken(refreshToken, deviceId, clientType)
-            }.code shouldBe MemberExceptionCode.REFRESHTOKEN_DATABASE_FIND_FAILED
+            shouldThrow<JwtException> {
+                authService.refreshAccessToken(refreshToken, deviceId, clientType)
+            }.code shouldBe JwtExceptionCode.MALFORMED
 
             verify(jwtProvider, times(1)).validateOrThrow(refreshToken)
             verify(refreshTokenRepository, times(1)).findByOpaqueIdAndJti(opaqueId, jti)
@@ -213,7 +213,7 @@ class AuthMemberServiceTest : DescribeSpec({
             doNothing().`when`(refreshTokenRepository).delete(refreshTokenEntity)
 
             shouldThrow<JwtException> {
-                memberService.refreshAccessToken(expiredRefreshToken, deviceId, clientType)
+                authService.refreshAccessToken(expiredRefreshToken, deviceId, clientType)
             }.code shouldBe JwtExceptionCode.EXPIRED
 
             verify(refreshTokenRepository, times(1)).delete(refreshTokenEntity)
@@ -243,7 +243,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(memberRepository.findByOpaqueId(opaqueId)).thenReturn(Optional.empty())
 
             shouldThrow<NoSuchElementException> {
-                memberService.refreshAccessToken(refreshToken, deviceId, clientType)
+                authService.refreshAccessToken(refreshToken, deviceId, clientType)
             }
 
             verify(memberRepository, times(1)).findByOpaqueId(opaqueId)
@@ -275,7 +275,7 @@ class AuthMemberServiceTest : DescribeSpec({
 
             // when & then
             shouldThrow<RuntimeException> {
-                memberService.refreshAccessToken(refreshToken, deviceId, clientType)
+                authService.refreshAccessToken(refreshToken, deviceId, clientType)
             }
         }
 
@@ -312,10 +312,10 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock<RefreshTokenEntity>())
 
             // when - Web client
-            memberService.refreshAccessToken(refreshToken, null, webClientType)
+            authService.refreshAccessToken(refreshToken, null, webClientType)
 
             // when - App client
-            memberService.refreshAccessToken(refreshToken, deviceIdForApp, appClientType)
+            authService.refreshAccessToken(refreshToken, deviceIdForApp, appClientType)
 
             // then - Both should save RefreshTokenEntity
             verify(refreshTokenRepository, times(2)).save(any<RefreshTokenEntity>())
@@ -354,7 +354,7 @@ class AuthMemberServiceTest : DescribeSpec({
         whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
 
         // when
-        val result = memberService.emailLogin(email, deviceId, clientType)
+        val result = authService.emailLogin(email, deviceId, clientType)
 
         // then
         result.accessToken shouldBe accessToken
@@ -393,7 +393,7 @@ class AuthMemberServiceTest : DescribeSpec({
         whenever(jwtProperties.refreshExp).thenReturn(Duration.ofDays(7))
 
         // when
-        memberService.emailLogin(email, deviceId, clientType)
+        authService.emailLogin(email, deviceId, clientType)
 
         // then
         verify(refreshTokenRepository).delete(existingRefreshToken)
@@ -432,7 +432,7 @@ class AuthMemberServiceTest : DescribeSpec({
         whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
 
         // when
-        val result = memberService.emailLogin(email, deviceId, clientType)
+        val result = authService.emailLogin(email, deviceId, clientType)
 
         // then
         result.accessToken shouldBe accessToken
@@ -480,7 +480,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
 
             // when
-            val result = memberService.signUp(email, deviceId, clientType)
+            val result = authService.signUp(email, deviceId, clientType)
 
             // then
             result.accessToken shouldBe accessToken
@@ -528,7 +528,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
 
             // when
-            val result = memberService.signUp(email, deviceId, clientType)
+            val result = authService.signUp(email, deviceId, clientType)
 
             // then
             result.accessToken shouldBe accessToken
@@ -579,7 +579,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
 
             // when
-            val result = memberService.signUp(email, deviceId, clientType)
+            val result = authService.signUp(email, deviceId, clientType)
 
             // then
             result.accessToken shouldBe accessToken
@@ -618,7 +618,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
 
             // when
-            memberService.signUp(email, deviceId, clientType)
+            authService.signUp(email, deviceId, clientType)
 
             // then
             verify(nicknameGenerator, times(4)).generate()
@@ -635,7 +635,7 @@ class AuthMemberServiceTest : DescribeSpec({
 
             // when & then
             shouldThrow<RuntimeException> {
-                memberService.signUp(invalidEmail, deviceId, clientType)
+                authService.signUp(invalidEmail, deviceId, clientType)
             }
 
             verify(authEmailService).validateEmailFormat(invalidEmail)
@@ -669,7 +669,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock())
 
             // when
-            memberService.signUp(email, deviceId, clientType)
+            authService.signUp(email, deviceId, clientType)
 
             // then
             val savedMember = memberCaptor.firstValue
@@ -695,11 +695,11 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(memberRepository.save(any<MemberEntity>())).thenThrow(dbException)
 
             // when & then
-            val exception = shouldThrow<MemberException> {
-                memberService.signUp(email, deviceId, clientType)
+            val exception = shouldThrow<AuthException> {
+                authService.signUp(email, deviceId, clientType)
             }
 
-            exception.code shouldBe MemberExceptionCode.DATABASE_SAVE_FAILED
+            exception.code shouldBe AuthExceptionCode.DATABASE_SAVE_FAILED
             exception.cause shouldBe dbException
         }
     }
@@ -716,7 +716,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
 
             // when
-            memberService.logout(refreshToken)
+            authService.logout(refreshToken)
 
             // then
             verify(refreshTokenRepository, times(1)).deleteByOpaqueIdAndJti(opaqueId, jti)
@@ -734,12 +734,12 @@ class AuthMemberServiceTest : DescribeSpec({
                 .thenThrow(RuntimeException("DB error"))
 
             // when
-            val ex = shouldThrow<MemberException> {
-                memberService.logout(refreshToken)
+            val ex = shouldThrow<AuthException> {
+                authService.logout(refreshToken)
             }
 
             // then
-            ex.code shouldBe MemberExceptionCode.LOGOUT_FAILED
+            ex.code shouldBe AuthExceptionCode.LOGOUT_FAILED
             verify(refreshTokenRepository, times(1)).deleteByOpaqueIdAndJti(opaqueId, jti)
         }
     }
@@ -779,7 +779,7 @@ class AuthMemberServiceTest : DescribeSpec({
             whenever(refreshTokenRepository.save(any<RefreshTokenEntity>())).thenReturn(mock<RefreshTokenEntity>())
 
             // when
-            val result = memberService.refreshAccessToken(refreshToken, deviceId, clientType)
+            val result = authService.refreshAccessToken(refreshToken, deviceId, clientType)
 
             // then
             result.accessToken shouldBe newAccessToken

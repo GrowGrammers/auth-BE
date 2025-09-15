@@ -1,12 +1,13 @@
 package com.wq.auth.integration
 
-import com.wq.auth.api.controller.member.MemberController
+import com.wq.auth.api.controller.auth.AuthController
 import com.wq.auth.api.domain.email.AuthEmailService
-import com.wq.auth.api.domain.member.MemberService
-import com.wq.auth.shared.jwt.JwtProperties
-import com.wq.auth.shared.jwt.JwtProvider
-import com.wq.auth.shared.jwt.error.JwtException
-import com.wq.auth.shared.jwt.error.JwtExceptionCode
+import com.wq.auth.api.domain.auth.AuthService
+import com.wq.auth.security.jwt.JwtProperties
+import com.wq.auth.security.jwt.JwtProvider
+import com.wq.auth.security.jwt.error.JwtException
+import com.wq.auth.security.jwt.error.JwtExceptionCode
+import com.wq.auth.security.principal.PrincipalDetails
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.extensions.spring.SpringTestExtension
 import org.mockito.BDDMockito.given
@@ -23,12 +24,13 @@ import org.springframework.test.web.servlet.MockMvc
 import java.time.Duration
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
+import com.wq.auth.api.domain.member.entity.Role
 
 @WebMvcTest(
-    controllers = [MemberController::class],
+    controllers = [AuthController::class],
     //excludeAutoConfiguration = [org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration::class]
 )
-class MemberControllerIntegrationTest : DescribeSpec() {
+class AuthControllerIntegrationTest : DescribeSpec() {
 
     override fun extensions() = listOf(SpringTestExtension())
 
@@ -36,7 +38,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
     lateinit var mockMvc: MockMvc
 
     @MockitoBean
-    lateinit var memberService: MemberService
+    lateinit var authService: AuthService
 
     @MockitoBean
     lateinit var authEmailService: AuthEmailService
@@ -62,13 +64,13 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                     val accessTokenExpiredAt = System.currentTimeMillis() + 3600000
                     val refreshTokenExpiredAt = System.currentTimeMillis() + (7 * 24 * 3600000)
 
-                    val tokenResult = MemberService.TokenResult(
+                    val tokenResult = AuthService.TokenResult(
                         newAccessToken,
                         newRefreshToken,
                         accessTokenExpiredAt,
                         refreshTokenExpiredAt
                     )
-                    given(memberService.refreshAccessToken(refreshToken, deviceId, clientType))
+                    given(authService.refreshAccessToken(refreshToken, deviceId, clientType))
                         .willReturn(tokenResult)
                     given(jwtProperties.refreshExp).willReturn(Duration.ofDays(7))
 
@@ -100,7 +102,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                         .andExpect(header().string("Set-Cookie", Matchers.containsString("HttpOnly")))
                         .andExpect(header().string("Set-Cookie", Matchers.containsString("SameSite=Lax")))
 
-                    verify(memberService).refreshAccessToken(refreshToken, deviceId, clientType)
+                    verify(authService).refreshAccessToken(refreshToken, deviceId, clientType)
                 }
             }
 
@@ -115,13 +117,13 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                     val accessTokenExpiredAt = System.currentTimeMillis() + 3600000
                     val refreshTokenExpiredAt = System.currentTimeMillis() + (7 * 24 * 3600000)
 
-                    val tokenResult = MemberService.TokenResult(
+                    val tokenResult = AuthService.TokenResult(
                         newAccessToken,
                         newRefreshToken,
                         accessTokenExpiredAt,
                         refreshTokenExpiredAt
                     )
-                    given(memberService.refreshAccessToken(refreshToken, deviceId, clientType))
+                    given(authService.refreshAccessToken(refreshToken, deviceId, clientType))
                         .willReturn(tokenResult)
 
                     val requestBody = """{"refreshToken": "$refreshToken", "deviceId": "$deviceId"}"""
@@ -142,7 +144,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                         .andExpect(jsonPath("$.data.refreshExpiredAt").value(refreshTokenExpiredAt))
                         .andExpect(header().doesNotExist("Set-Cookie"))
 
-                    verify(memberService).refreshAccessToken(refreshToken, deviceId, clientType)
+                    verify(authService).refreshAccessToken(refreshToken, deviceId, clientType)
                 }
             }
 
@@ -154,7 +156,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                     val deviceId: String? = null
                     val requestBody = """{"deviceId": null}"""
 
-                    given(memberService.refreshAccessToken(refreshToken, deviceId, clientType))
+                    given(authService.refreshAccessToken(refreshToken, deviceId, clientType))
                         .willThrow(JwtException(JwtExceptionCode.MALFORMED))
 
                     // when & then
@@ -168,7 +170,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                             .with(user("testUser").roles("USER"))
                     ).andExpect(status().isUnauthorized)
 
-                    verify(memberService).refreshAccessToken(refreshToken, deviceId, clientType)
+                    verify(authService).refreshAccessToken(refreshToken, deviceId, clientType)
                 }
             }
 
@@ -180,7 +182,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                     val deviceId = "device123"
                     val requestBody = """{"refreshToken": "$refreshToken", "deviceId": "$deviceId"}"""
 
-                    given(memberService.refreshAccessToken(refreshToken, deviceId, clientType))
+                    given(authService.refreshAccessToken(refreshToken, deviceId, clientType))
                         .willThrow(JwtException(JwtExceptionCode.EXPIRED))
 
                     // when & then
@@ -193,7 +195,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                             .with(user("testUser").roles("USER"))
                     ).andExpect(status().isUnauthorized)
 
-                    verify(memberService).refreshAccessToken(refreshToken, deviceId, clientType)
+                    verify(authService).refreshAccessToken(refreshToken, deviceId, clientType)
                 }
             }
         }
@@ -212,14 +214,14 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                     val accessTokenExpiredAt = System.currentTimeMillis() + 3600000
                     val refreshTokenExpiredAt = System.currentTimeMillis() + (7 * 24 * 3600000)
 
-                    val tokenResult = MemberService.TokenResult(
+                    val tokenResult = AuthService.TokenResult(
                         accessToken,
                         refreshToken,
                         accessTokenExpiredAt,
                         refreshTokenExpiredAt
                     )
 
-                    given(memberService.emailLogin(email, deviceId, clientType)).willReturn(tokenResult)
+                    given(authService.emailLogin(email, deviceId, clientType)).willReturn(tokenResult)
                     given(jwtProperties.refreshExp).willReturn(Duration.ofDays(7))
 
                     val requestBody = """{"email": "$email", "verifyCode": "$verifyCode", "deviceId": null}"""
@@ -246,7 +248,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                         )
 
                     verify(authEmailService).verifyCode(email, verifyCode)
-                    verify(memberService).emailLogin(email, deviceId, clientType)
+                    verify(authService).emailLogin(email, deviceId, clientType)
                 }
             }
 
@@ -262,14 +264,14 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                     val accessTokenExpiredAt = System.currentTimeMillis() + 3600000
                     val refreshTokenExpiredAt = System.currentTimeMillis() + (7 * 24 * 3600000)
 
-                    val tokenResult = MemberService.TokenResult(
+                    val tokenResult = AuthService.TokenResult(
                         accessToken,
                         refreshToken,
                         accessTokenExpiredAt,
                         refreshTokenExpiredAt
                     )
 
-                    given(memberService.emailLogin(email, deviceId, clientType)).willReturn(tokenResult)
+                    given(authService.emailLogin(email, deviceId, clientType)).willReturn(tokenResult)
 
                     val requestBody = """{"email": "$email", "verifyCode": "$verifyCode", "deviceId": "$deviceId"}"""
 
@@ -290,7 +292,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                         .andExpect(header().doesNotExist("Set-Cookie"))
 
                     verify(authEmailService).verifyCode(email, verifyCode)
-                    verify(memberService).emailLogin(email, deviceId, clientType)
+                    verify(authService).emailLogin(email, deviceId, clientType)
                 }
             }
         }
@@ -301,21 +303,22 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                 it("성공 응답과 쿠키 삭제를 반환해야 한다") {
                     // given
                     val refreshToken = "valid-refresh-token"
-                    val accessToken = "valid-access-token"
                     val clientType = "web"
-
+                    val principal = PrincipalDetails(
+                        opaqueId = "opaqueId",
+                        role = Role.MEMBER
+                    )
                     val requestBody = """{}"""
 
                     // when & then
                     mockMvc.perform(
                         post("/api/v1/auth/members/logout")
                             .cookie(Cookie("refreshToken", refreshToken))
-                            .header("AccessToken", accessToken)
                             .header("X-Client-Type", clientType)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody)
                             .with(csrf()) //security 우회용
-                            .with(user("testUser").roles("USER"))
+                            .with(user(principal))
                     )
                         .andExpect(status().isOk)
                         .andExpect(jsonPath("$.success").value(true))
@@ -329,7 +332,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                         )
                         .andExpect(header().string("Set-Cookie", Matchers.containsString("Max-Age=0")))
 
-                    verify(memberService).logout(refreshToken)
+                    verify(authService).logout(refreshToken)
                 }
             }
 
@@ -338,6 +341,10 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                     // given
                     val refreshToken = "valid-refresh-token"
                     val clientType = "app"
+                    val principal = PrincipalDetails(
+                        opaqueId = "opaqueId",
+                        role = Role.MEMBER
+                    )
 
                     val requestBody = """{"refreshToken": "$refreshToken"}"""
 
@@ -348,7 +355,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody)
                             .with(csrf()) //security 우회용
-                            .with(user("testUser").roles("USER"))
+                            .with(user(principal))
                     )
                         .andExpect(status().isOk)
                         .andExpect(jsonPath("$.success").value(true))
@@ -356,7 +363,7 @@ class MemberControllerIntegrationTest : DescribeSpec() {
                         .andExpect(jsonPath("$.data").isEmpty)
                         .andExpect(header().doesNotExist("Set-Cookie"))
 
-                    verify(memberService).logout(refreshToken)
+                    verify(authService).logout(refreshToken)
                 }
             }
         }
