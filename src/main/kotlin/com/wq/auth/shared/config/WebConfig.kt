@@ -13,7 +13,7 @@ class WebConfig(
     
     override fun addCorsMappings(registry: CorsRegistry) {
         val origins = allowedOrigins.split(",").map { it.trim() }.toTypedArray()
-        
+
         registry.addMapping("/api/**")
             .allowedOrigins(*origins)  // 환경변수로 설정된 특정 origin들만 허용
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")

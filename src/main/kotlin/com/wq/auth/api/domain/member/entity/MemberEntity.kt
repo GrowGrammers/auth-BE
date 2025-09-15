@@ -45,8 +45,8 @@ open class MemberEntity protected constructor(
         fun createEmailVerifiedMember(nickname: String) =
             MemberEntity(
                 nickname = nickname,
+                isEmailVerified = true,
                 opaqueId = UUID.randomUUID().toString(),
-                isEmailVerified = true
             )
 
         fun create(
@@ -55,7 +55,7 @@ open class MemberEntity protected constructor(
         ): MemberEntity {
             require(nickname.isNotBlank()) { "닉네임은 필수입니다" }
             require(nickname.length <= 100) { "닉네임은 100자를 초과할 수 없습니다" }
-            
+
             return MemberEntity(
                 providerId = null,
                 opaqueId = UUID.randomUUID().toString(),
@@ -73,7 +73,7 @@ open class MemberEntity protected constructor(
             require(providerId.isNotBlank()) { "소셜 제공자 ID는 필수입니다" }
             require(nickname.isNotBlank()) { "닉네임은 필수입니다" }
             require(nickname.length <= 100) { "닉네임은 100자를 초과할 수 없습니다" }
-            
+
             return MemberEntity(
                 providerId = providerId,
                 opaqueId = UUID.randomUUID().toString(),

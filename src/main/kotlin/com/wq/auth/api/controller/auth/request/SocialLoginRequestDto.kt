@@ -1,6 +1,6 @@
 package com.wq.auth.api.controller.auth.request
 
-import com.wq.auth.api.domain.member.entity.ProviderType
+import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.domain.auth.request.SocialLoginRequest
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank

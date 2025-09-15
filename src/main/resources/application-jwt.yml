@@ -1,4 +1,4 @@
 jwt:
-  secret: ${JWT_SECRET:MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=}
-  access-exp: ${JWT_ACCESS_EXPIRATION:15m}
-  refresh-exp: ${JWT_REFRESH_EXPIRATION:14d}
+  secret: ${JWT_SECRET:jwt-secret}
+  access-exp: ${JWT_ACCESS_TOKEN_EXPIRATION}
+  refresh-exp: ${JWT_REFRESH_TOKEN_EXPIRATION}

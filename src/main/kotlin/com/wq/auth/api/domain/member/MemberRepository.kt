@@ -1,7 +1,7 @@
 package com.wq.auth.api.domain.member
 
 import com.wq.auth.api.domain.member.entity.MemberEntity
-import com.wq.auth.api.domain.member.entity.ProviderType
+import com.wq.auth.api.domain.auth.entity.ProviderType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -12,7 +12,6 @@ import java.util.*
 interface MemberRepository : JpaRepository<MemberEntity, Long> {
 
     fun existsByNickname(nickname: String): Boolean
-
     fun findByOpaqueId(opaqueId: String): Optional<MemberEntity>
 
     fun findByProviderId(providerId: String): Optional<MemberEntity>

@@ -1,4 +1,4 @@
-package com.wq.auth.api.domain.member.entity
+package com.wq.auth.api.domain.auth.entity
 
 enum class ProviderType {
     EMAIL,      // 자체 회원가입

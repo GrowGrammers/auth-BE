@@ -4,6 +4,7 @@ import com.wq.auth.api.controller.email.request.EmailRequestDto
 import com.wq.auth.api.controller.email.request.EmailVerifyRequestDto
 import com.wq.auth.api.domain.email.AuthEmailService
 import com.wq.auth.api.domain.email.error.EmailException
+import com.wq.auth.security.annotation.PublicApi
 import com.wq.auth.web.common.response.*
 import org.springframework.web.bind.annotation.*
 
@@ -12,6 +13,7 @@ class AuthEmailController(
     private val authEmailService: AuthEmailService
 ) : AuthEmailApiDocs {
 
+    @PublicApi
     @PostMapping("api/v1/auth/email/request")
     override fun requestCode(@RequestBody req: EmailRequestDto): BaseResponse {
         return try {

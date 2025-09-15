@@ -1,9 +1,11 @@
-package com.wq.auth.api.controller.member
+package com.wq.auth.api.controller.auth
 
-import com.wq.auth.api.controller.member.request.EmailLoginRequestDto
-import com.wq.auth.api.controller.member.request.LogoutRequestDto
-import com.wq.auth.api.controller.member.request.RefreshAccessTokenRequestDto
-import com.wq.auth.api.controller.member.response.RefreshAccessTokenResponseDto
+import com.wq.auth.api.controller.auth.request.EmailLoginRequestDto
+import com.wq.auth.api.controller.auth.request.LogoutRequestDto
+import com.wq.auth.api.controller.auth.request.RefreshAccessTokenRequestDto
+import com.wq.auth.api.controller.auth.response.LoginResponseDto
+import com.wq.auth.api.controller.auth.response.RefreshAccessTokenResponseDto
+import com.wq.auth.security.principal.PrincipalDetails
 import com.wq.auth.web.common.response.BaseResponse
 import com.wq.auth.web.common.response.FailResponse
 import com.wq.auth.web.common.response.SuccessResponse
@@ -14,11 +16,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 
 @Tag(name = "회원", description = "로그인, 로그아웃 등 회원 관련 API")
-interface MemberApiDocs {
+interface AuthApiDocs {
 
     @Operation(
         summary = "이메일 로그인",
@@ -44,8 +48,13 @@ interface MemberApiDocs {
             )
         ]
     )
-    fun emailLogin(@RequestBody req: EmailLoginRequestDto): BaseResponse
- @Operation(
+    fun emailLogin(
+        response: HttpServletResponse,
+        @RequestHeader("X-Client-Type") clientType: String,
+        @RequestBody req: EmailLoginRequestDto
+    ): SuccessResponse<LoginResponseDto>
+
+    @Operation(
         summary = "로그아웃",
         description = "RefreshToken을 DB에서 삭제하여 로그아웃합니다."
     )
@@ -64,7 +73,14 @@ interface MemberApiDocs {
             )
         ]
     )
-    fun logout(@RequestBody req: LogoutRequestDto): BaseResponse
+
+    fun logout(
+        @CookieValue(name = "refreshToken", required = false) refreshToken: String?,
+        response: HttpServletResponse,
+        @RequestHeader(name = "X-Client-Type", required = true) clientType: String,
+        @AuthenticationPrincipal principalDetail: PrincipalDetails,
+        @RequestBody req: LogoutRequestDto?
+    ): SuccessResponse<Void?>
 
     @Operation(
         summary = "액세스 토큰 재발급",
@@ -106,8 +122,10 @@ interface MemberApiDocs {
             )
         ]
     )
-    fun refreshAccessToken(
-        @CookieValue(name = "refreshToken", required = true) refreshToken: String,
+     fun refreshAccessToken(
+        @CookieValue(name = "refreshToken", required = false) refreshToken: String,
+        @RequestHeader("X-Client-Type") clientType: String,
         response: HttpServletResponse,
-        @RequestBody req: RefreshAccessTokenRequestDto): BaseResponse
+        @RequestBody req: RefreshAccessTokenRequestDto?,
+    ): SuccessResponse<RefreshAccessTokenResponseDto>
 }

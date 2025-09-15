@@ -42,7 +42,7 @@ class JwtProvider(
     fun createAccessToken(
         opaqueId: String,
         role: Role,
-        extraClaims: Map<String, Any>
+        extraClaims: Map<String, Any?>
     ): String {
         val now = Instant.now()
         val exp = Date.from(now.plus(jwtProperties.accessExp))
@@ -101,6 +101,17 @@ class JwtProvider(
         
         return roleString?.let { Role.valueOf(it) }
     }
+
+    /**
+     * JWT 토큰에서 jti(ID)를 추출합니다.
+     * @param token 대상 JWT 토큰
+     * @return JWT ID (RefreshToken 고유 식별자)
+     */
+    fun getJti(token: String): String =
+        Jwts.parser().verifyWith(key)
+            .build().parseSignedClaims(token)
+            .payload
+            .id
 
     /**
      * JWT 토큰에서 모든 클레임을 추출합니다.

@@ -1,6 +1,6 @@
 package com.wq.auth.domain.oauth
 
-import com.wq.auth.api.domain.member.entity.ProviderType
+import com.wq.auth.api.domain.auth.entity.ProviderType
 
 /**
  * 도메인에서 사용하는 소셜 사용자 정보 값 타입
