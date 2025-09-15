@@ -1,4 +1,4 @@
-package com.wq.auth.api.controller.member.response
+package com.wq.auth.api.controller.auth.response
 
 data class LoginResponseDto(
     val accessToken: String?,
@@ -14,4 +14,3 @@ data class LoginResponseDto(
             LoginResponseDto(null, refreshToken, null, refreshExpiredAt)
     }
 }
-

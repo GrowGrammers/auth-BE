@@ -1,7 +1,7 @@
 package com.wq.auth.api.external.oauth
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.wq.auth.api.domain.member.entity.ProviderType
+import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.api.external.oauth.dto.GoogleUserInfoResponse
 import com.wq.auth.domain.oauth.OAuthClient
 import com.wq.auth.domain.oauth.OAuthUser

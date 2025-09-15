@@ -1,4 +1,4 @@
-package com.wq.auth.api.controller.member.response
+package com.wq.auth.api.controller.auth.response
 
 data class RefreshAccessTokenResponseDto(
     val accessToken: String?,

@@ -1,10 +1,10 @@
 package com.wq.auth.domain.auth
 
-import com.wq.auth.api.domain.member.AuthProviderRepository
+import com.wq.auth.api.domain.auth.AuthProviderRepository
 import com.wq.auth.api.domain.member.MemberRepository
-import com.wq.auth.api.domain.member.entity.AuthProviderEntity
+import com.wq.auth.api.domain.auth.entity.AuthProviderEntity
 import com.wq.auth.api.domain.member.entity.MemberEntity
-import com.wq.auth.api.domain.member.entity.ProviderType
+import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.domain.auth.request.SocialLoginRequest
 import com.wq.auth.domain.auth.response.SocialLoginResult
 import com.wq.auth.domain.oauth.OAuthClient

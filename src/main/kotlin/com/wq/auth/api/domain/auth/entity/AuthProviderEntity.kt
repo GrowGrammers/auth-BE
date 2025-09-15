@@ -1,5 +1,6 @@
-package com.wq.auth.api.domain.member.entity
+package com.wq.auth.api.domain.auth.entity
 
+import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.shared.entity.BaseEntity
 import jakarta.persistence.*
 

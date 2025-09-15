@@ -1,10 +1,10 @@
-package com.wq.auth.api.controller.member
+package com.wq.auth.api.controller.auth
 
-import com.wq.auth.api.controller.member.request.EmailLoginRequestDto
-import com.wq.auth.api.controller.member.request.LogoutRequestDto
-import com.wq.auth.api.controller.member.request.RefreshAccessTokenRequestDto
-import com.wq.auth.api.controller.member.response.LoginResponseDto
-import com.wq.auth.api.controller.member.response.RefreshAccessTokenResponseDto
+import com.wq.auth.api.controller.auth.request.EmailLoginRequestDto
+import com.wq.auth.api.controller.auth.request.LogoutRequestDto
+import com.wq.auth.api.controller.auth.request.RefreshAccessTokenRequestDto
+import com.wq.auth.api.controller.auth.response.LoginResponseDto
+import com.wq.auth.api.controller.auth.response.RefreshAccessTokenResponseDto
 import com.wq.auth.security.principal.PrincipalDetails
 import com.wq.auth.web.common.response.BaseResponse
 import com.wq.auth.web.common.response.FailResponse
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 
 @Tag(name = "회원", description = "로그인, 로그아웃 등 회원 관련 API")
-interface MemberApiDocs {
+interface AuthApiDocs {
 
     @Operation(
         summary = "이메일 로그인",

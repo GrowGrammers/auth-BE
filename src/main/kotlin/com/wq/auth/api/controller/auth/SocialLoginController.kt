@@ -3,7 +3,7 @@ package com.wq.auth.api.controller.auth
 import com.wq.auth.api.controller.auth.request.GoogleSocialLoginRequestDto
 import com.wq.auth.api.controller.auth.request.SocialLoginRequestDto
 import com.wq.auth.api.controller.auth.request.toDomain
-import com.wq.auth.api.domain.member.entity.ProviderType
+import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.domain.auth.SocialLoginService
 import com.wq.auth.security.annotation.PublicApi
 import com.wq.auth.web.common.response.Responses

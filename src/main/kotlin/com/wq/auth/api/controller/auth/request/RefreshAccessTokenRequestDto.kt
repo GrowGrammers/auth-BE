@@ -1,3 +1,3 @@
-package com.wq.auth.api.controller.member.request
+package com.wq.auth.api.controller.auth.request
 
 data class RefreshAccessTokenRequestDto (val refreshToken: String?, val deviceId: String?)
