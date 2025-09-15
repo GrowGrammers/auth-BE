@@ -1,12 +1,50 @@
 package com.wq.auth.api.domain.member
 
+import com.wq.auth.api.domain.auth.AuthProviderRepository
+import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.api.domain.member.entity.MemberEntity
+import com.wq.auth.api.domain.member.error.MemberException
+import com.wq.auth.api.domain.member.error.MemberExceptionCode
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class MemberService(
     private val memberRepository: MemberRepository,
+    private val authProviderRepository: AuthProviderRepository,
     ) {
+
+    data class UserInfoResult(
+        val nickname: String,
+        val email: String,
+    )
+
+    @Transactional(readOnly = true)
+    fun getUserInfo(opaqueId: String): UserInfoResult {
+        val member = memberRepository.findByOpaqueId(opaqueId)
+            .orElseThrow { MemberException(MemberExceptionCode.USER_INFO_RETRIEVE_FAILED)}
+
+        val authProviders = authProviderRepository.findByMember(member)
+        if (authProviders.isEmpty()) {
+            throw MemberException(MemberExceptionCode.USER_INFO_RETRIEVE_FAILED)
+        }
+        val email = authProviders
+            .sortedBy { provider ->
+                when (provider.providerType) {
+                    ProviderType.EMAIL -> 0
+                    ProviderType.GOOGLE -> 1
+                    ProviderType.NAVER -> 2
+                    else -> 3
+                }
+            }
+            .first()
+            .email
+
+        return UserInfoResult(
+            nickname = member.nickname,
+            email = email
+        )
+    }
 
     fun getAll(): List<MemberEntity> = memberRepository.findAll()
 

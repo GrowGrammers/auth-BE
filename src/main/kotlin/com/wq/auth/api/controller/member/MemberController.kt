@@ -1,15 +1,27 @@
 package com.wq.auth.api.controller.member
 
+import com.wq.auth.api.controller.member.response.UserInfoResponseDto
 import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.member.MemberService
+import com.wq.auth.security.annotation.AuthenticatedApi
+import com.wq.auth.security.principal.PrincipalDetails
 import com.wq.auth.web.common.response.Responses
 import com.wq.auth.web.common.response.SuccessResponse
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @RestController
 class MemberController(
     private val memberService: MemberService,
-) {
+) : MemberApiDocs {
+
+    @GetMapping("/api/v1/auth/members/user-info")
+    @AuthenticatedApi
+    override fun getUserInfo(@AuthenticationPrincipal principalDetail: PrincipalDetails): SuccessResponse<UserInfoResponseDto> {
+        val (nickname, email) = memberService.getUserInfo(principalDetail.opaqueId)
+        val resp = UserInfoResponseDto(nickname, email)
+        return Responses.success(message = "회원 정보 조회 성공", data = resp)
+    }
 
     @GetMapping("/api/v1/members")
     fun getAll(): SuccessResponse<List<MemberEntity>> =
