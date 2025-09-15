@@ -8,11 +8,15 @@ import com.wq.auth.api.controller.member.response.RefreshAccessTokenResponseDto
 import com.wq.auth.api.domain.email.AuthEmailService
 import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.member.MemberService
+import com.wq.auth.security.annotation.AuthenticatedApi
+import com.wq.auth.security.annotation.PublicApi
 import com.wq.auth.security.jwt.JwtProperties
+import com.wq.auth.security.principal.PrincipalDetails
 import com.wq.auth.web.common.response.Responses
 import com.wq.auth.web.common.response.SuccessResponse
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseCookie
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -23,10 +27,12 @@ class MemberController(
 ) : MemberApiDocs {
 
     @PostMapping("api/v1/auth/members/email-login")
+    @PublicApi
     override fun emailLogin(
         response: HttpServletResponse,
         @RequestHeader("X-Client-Type", required = true) clientType: String,
-        @RequestBody req: EmailLoginRequestDto
+        @RequestBody req: EmailLoginRequestDto,
+
     ): SuccessResponse<LoginResponseDto> {
         emailService.verifyCode(req.email, req.verifyCode)
         val (accessToken, newRefreshToken, accessTokenExpiredAt, refreshTokenExpiredAt) = memberService.emailLogin(
@@ -62,21 +68,21 @@ class MemberController(
         return Responses.success(message = "로그인에 성공했습니다.", data = resp)
     }
 
-    //헤더에 액세스토큰 추가
     @PostMapping("api/v1/auth/members/logout")
+    @AuthenticatedApi
     override fun logout(
-        @CookieValue(name = "refreshToken", required = true) refreshToken: String?,
+        @CookieValue(name = "refreshToken", required = false) refreshToken: String?,
         response: HttpServletResponse,
-        @RequestHeader(name = "Authorization", required = false) accessToken: String?,
         @RequestHeader(name = "X-Client-Type", required = true) clientType: String,
-        @RequestBody req: LogoutRequestDto
+        @AuthenticationPrincipal principalDetail: PrincipalDetails,
+        @RequestBody req: LogoutRequestDto?
     ): SuccessResponse<Void?> {
 
         val currentRefreshToken : String?
         if(clientType == "web") {
             currentRefreshToken = refreshToken
         } else {
-            currentRefreshToken = req.refreshToken
+            currentRefreshToken = req?.refreshToken
         }
         memberService.logout(currentRefreshToken!!)
 
@@ -98,20 +104,21 @@ class MemberController(
     }
 
     @PostMapping("api/v1/auth/members/refresh")
+    @PublicApi
     override fun refreshAccessToken(
-        @CookieValue(name = "refreshToken", required = true) refreshToken: String,
+        @CookieValue(name = "refreshToken", required = false) refreshToken: String,
         @RequestHeader("X-Client-Type") clientType: String,
         response: HttpServletResponse,
-        @RequestBody req: RefreshAccessTokenRequestDto
+        @RequestBody req: RefreshAccessTokenRequestDto?,
     ): SuccessResponse<RefreshAccessTokenResponseDto> {
         val currentRefreshToken : String?
         if(clientType == "web") {
             currentRefreshToken = refreshToken
         } else {
-            currentRefreshToken = req.refreshToken
+            currentRefreshToken = req?.refreshToken
         }
         val (accessToken, newRefreshToken, accessTokenExpiredAt, refreshTokenExpiredAt) = memberService.refreshAccessToken(
-            currentRefreshToken!!, req.deviceId,
+            currentRefreshToken!!, req?.deviceId,
             clientType = clientType
         )
 

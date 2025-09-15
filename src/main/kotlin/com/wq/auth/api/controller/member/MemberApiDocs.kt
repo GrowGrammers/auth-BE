@@ -5,6 +5,7 @@ import com.wq.auth.api.controller.member.request.LogoutRequestDto
 import com.wq.auth.api.controller.member.request.RefreshAccessTokenRequestDto
 import com.wq.auth.api.controller.member.response.LoginResponseDto
 import com.wq.auth.api.controller.member.response.RefreshAccessTokenResponseDto
+import com.wq.auth.security.principal.PrincipalDetails
 import com.wq.auth.web.common.response.BaseResponse
 import com.wq.auth.web.common.response.FailResponse
 import com.wq.auth.web.common.response.SuccessResponse
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
@@ -73,11 +75,11 @@ interface MemberApiDocs {
     )
 
     fun logout(
-        @CookieValue(name = "refreshToken", required = true) refreshToken: String?,
+        @CookieValue(name = "refreshToken", required = false) refreshToken: String?,
         response: HttpServletResponse,
-        @RequestHeader(name = "AccessToken", required = false) accessToken: String?,
         @RequestHeader(name = "X-Client-Type", required = true) clientType: String,
-        @RequestBody req: LogoutRequestDto
+        @AuthenticationPrincipal principalDetail: PrincipalDetails,
+        @RequestBody req: LogoutRequestDto?
     ): SuccessResponse<Void?>
 
     @Operation(
@@ -120,10 +122,10 @@ interface MemberApiDocs {
             )
         ]
     )
-    fun refreshAccessToken(
-        @CookieValue(name = "refreshToken", required = true) refreshToken: String,
+     fun refreshAccessToken(
+        @CookieValue(name = "refreshToken", required = false) refreshToken: String,
         @RequestHeader("X-Client-Type") clientType: String,
         response: HttpServletResponse,
-        @RequestBody req: RefreshAccessTokenRequestDto
+        @RequestBody req: RefreshAccessTokenRequestDto?,
     ): SuccessResponse<RefreshAccessTokenResponseDto>
 }
