@@ -18,8 +18,8 @@ class RefreshTokenEntity(
     @Column(nullable = false, unique = true)
     var jti: String,
 
-    @Column(name = "expired_at", nullable = false)
-    var expiredAt: Instant,
+    @Column(name = "expired_at", nullable = true)
+    var expiredAt: Instant? = null,
 
     @Column(name = "opaque_id", nullable = false, length = 64)
     val opaqueId: String,
@@ -46,6 +46,14 @@ class RefreshTokenEntity(
                 expiredAt = expiredAt,
                 opaqueId = opaqueId,
                 deviceId = deviceId
+            )
+        }
+
+        fun of(member: MemberEntity, jti: String, opaqueId: String): RefreshTokenEntity {
+            return RefreshTokenEntity(
+                member = member,
+                jti = jti,
+                opaqueId = opaqueId
             )
         }
     }
