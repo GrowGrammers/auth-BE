@@ -147,7 +147,7 @@ class AuthService(
             ?: throw JwtException(JwtExceptionCode.MALFORMED)
 
         //토큰 엔티티 만료 기간 확인
-        if (refreshTokenEntity.expiredAt.isBefore(Instant.now())) {
+        if (refreshTokenEntity.expiredAt?.isBefore(Instant.now()) == true) {
             refreshTokenRepository.delete(refreshTokenEntity)
             throw JwtException(JwtExceptionCode.EXPIRED)
         }

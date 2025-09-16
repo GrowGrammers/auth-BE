@@ -1,10 +1,12 @@
 package com.wq.auth.domain.auth
 
 import com.wq.auth.api.domain.auth.AuthProviderRepository
+import com.wq.auth.api.domain.auth.RefreshTokenRepository
 import com.wq.auth.api.domain.member.MemberRepository
 import com.wq.auth.api.domain.auth.entity.AuthProviderEntity
 import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.auth.entity.ProviderType
+import com.wq.auth.api.domain.auth.entity.RefreshTokenEntity
 import com.wq.auth.domain.auth.request.SocialLoginRequest
 import com.wq.auth.domain.auth.response.SocialLoginResult
 import com.wq.auth.domain.oauth.OAuthClient
@@ -32,7 +34,8 @@ class SocialLoginService(
     private val oauthClient: OAuthClient,
     private val memberRepository: MemberRepository,
     private val authProviderRepository: AuthProviderRepository,
-    private val jwtProvider: JwtProvider
+    private val jwtProvider: JwtProvider,
+    private val refreshTokenRepository: RefreshTokenRepository
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -82,6 +85,12 @@ class SocialLoginService(
         // 5. JWT 토큰 발급
         val accessToken = jwtProvider.createAccessToken(member.opaqueId, member.role)
         val refreshToken = jwtProvider.createRefreshToken(member.opaqueId)
+
+        // 6. RefreshToken 저장
+        val jti = jwtProvider.getJti(refreshToken)
+        val opaqueId = jwtProvider.getOpaqueId(refreshToken)
+        val refreshTokenEntity = RefreshTokenEntity.of(member, jti, opaqueId)
+        refreshTokenRepository.save(refreshTokenEntity)
 
         log.info { "소셜 로그인 완료: ${member.opaqueId}, 신규 회원: $isNewMember" }
 
