@@ -16,6 +16,7 @@ import com.wq.auth.shared.utils.NicknameGenerator
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
+import java.time.LocalDateTime
 
 @Service
 class AuthService(
@@ -72,6 +73,7 @@ class AuthService(
             refreshTokenEntity = RefreshTokenEntity.ofWeb(existingUser, jti, refreshTokenExpiredAt, opaqueId)
         }
         refreshTokenRepository.save(refreshTokenEntity)
+        existingUser.lastLoginAt = LocalDateTime.now()
 
         return TokenResult(accessToken, refreshToken, accessTokenExpiredAt, refreshTokenExpiredAt.toEpochMilli())
 
@@ -87,7 +89,7 @@ class AuthService(
             nickname = nicknameGenerator.generate()
             //중복 닉네임인 경우
         } while (memberRepository.existsByNickname(nickname))
-        val member = MemberEntity.createEmailVerifiedMember(nickname)
+        val member = MemberEntity.createEmailVerifiedMember(nickname, email)
         val opaqueId = member.opaqueId
 
         try {

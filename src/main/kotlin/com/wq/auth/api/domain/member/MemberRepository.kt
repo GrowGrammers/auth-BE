@@ -14,8 +14,6 @@ interface MemberRepository : JpaRepository<MemberEntity, Long> {
     fun existsByNickname(nickname: String): Boolean
     fun findByOpaqueId(opaqueId: String): Optional<MemberEntity>
 
-    fun findByProviderId(providerId: String): Optional<MemberEntity>
-
     @Query("""
         SELECT m FROM MemberEntity m 
         JOIN AuthProviderEntity ap ON m.id = ap.member.id 
