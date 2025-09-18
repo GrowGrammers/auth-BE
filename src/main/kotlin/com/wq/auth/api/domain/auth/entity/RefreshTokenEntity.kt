@@ -29,31 +29,12 @@ class RefreshTokenEntity(
 
 )  : BaseEntity() {
     companion object {
-        fun ofWeb(member: MemberEntity, jti: String, expiredAt: Instant, opaqueId: String): RefreshTokenEntity {
+        fun of(member: MemberEntity, jti: String, opaqueId: String, deviceId: String?= null): RefreshTokenEntity {
             return RefreshTokenEntity(
                 member = member,
                 jti = jti,
-                expiredAt = expiredAt,
-                opaqueId = opaqueId,
-                deviceId = null
-            )
-        }
-
-        fun ofApp(member: MemberEntity, jti: String, expiredAt: Instant, opaqueId: String, deviceId: String): RefreshTokenEntity {
-            return RefreshTokenEntity(
-                member = member,
-                jti = jti,
-                expiredAt = expiredAt,
                 opaqueId = opaqueId,
                 deviceId = deviceId
-            )
-        }
-
-        fun of(member: MemberEntity, jti: String, opaqueId: String): RefreshTokenEntity {
-            return RefreshTokenEntity(
-                member = member,
-                jti = jti,
-                opaqueId = opaqueId
             )
         }
     }

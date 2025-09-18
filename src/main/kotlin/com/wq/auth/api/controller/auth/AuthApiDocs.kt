@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
@@ -78,7 +77,6 @@ interface AuthApiDocs {
         @CookieValue(name = "refreshToken", required = false) refreshToken: String?,
         response: HttpServletResponse,
         @RequestHeader(name = "X-Client-Type", required = true) clientType: String,
-        @AuthenticationPrincipal principalDetail: PrincipalDetails,
         @RequestBody req: LogoutRequestDto?
     ): SuccessResponse<Void?>
 

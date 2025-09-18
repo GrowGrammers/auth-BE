@@ -6,18 +6,14 @@ import com.wq.auth.api.controller.auth.request.RefreshAccessTokenRequestDto
 import com.wq.auth.api.controller.auth.response.LoginResponseDto
 import com.wq.auth.api.controller.auth.response.RefreshAccessTokenResponseDto
 import com.wq.auth.api.domain.auth.AuthService
-import com.wq.auth.api.domain.auth.error.AuthException
-import com.wq.auth.api.domain.auth.error.AuthExceptionCode
 import com.wq.auth.api.domain.email.AuthEmailService
-import com.wq.auth.security.annotation.AuthenticatedApi
 import com.wq.auth.security.annotation.PublicApi
 import com.wq.auth.security.jwt.JwtProperties
-import com.wq.auth.security.principal.PrincipalDetails
 import com.wq.auth.web.common.response.Responses
 import com.wq.auth.web.common.response.SuccessResponse
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseCookie
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -36,11 +32,12 @@ class AuthController(
 
         ): SuccessResponse<LoginResponseDto> {
         emailService.verifyCode(req.email, req.verifyCode)
-        val (accessToken, newRefreshToken, accessTokenExpiredAt, refreshTokenExpiredAt) = authService.emailLogin(
+        val (accessToken, newRefreshToken) = authService.emailLogin(
             req.email,
             deviceId = req.deviceId,
-            clientType = clientType
         )
+
+        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer ${accessToken}")
 
         if (clientType == "web") {
             val refreshCookie = ResponseCookie.from("refreshToken", newRefreshToken)
@@ -54,28 +51,22 @@ class AuthController(
                 .build()
             response.addHeader("Set-Cookie", refreshCookie.toString())
 
-            val resp = LoginResponseDto.forWeb(
-                accessToken = accessToken,
-                expiredAt = accessTokenExpiredAt
-            )
-
-            return Responses.success(message = "로그인에 성공했습니다.", data = resp)
+            return Responses.success(message = "로그인에 성공했습니다.", data = null)
         }
 
+        //앱
         val resp = LoginResponseDto.forApp(
-            refreshToken = newRefreshToken,
-            refreshExpiredAt = refreshTokenExpiredAt
+            refreshToken = newRefreshToken
         )
         return Responses.success(message = "로그인에 성공했습니다.", data = resp)
     }
 
     @PostMapping("api/v1/auth/members/logout")
-    @AuthenticatedApi
+    @PublicApi
     override fun logout(
         @CookieValue(name = "refreshToken", required = false) refreshToken: String?,
         response: HttpServletResponse,
         @RequestHeader(name = "X-Client-Type", required = true) clientType: String,
-        @AuthenticationPrincipal principalDetail: PrincipalDetails,
         @RequestBody req: LogoutRequestDto?
     ): SuccessResponse<Void?> {
 
@@ -83,10 +74,6 @@ class AuthController(
             "web" -> refreshToken
             "app" -> req?.refreshToken
             else -> null
-        }
-
-        if (currentRefreshToken.isNullOrBlank()) {
-            throw AuthException(AuthExceptionCode.LOGOUT_FAILED)
         }
 
         authService.logout(currentRefreshToken)
@@ -116,16 +103,17 @@ class AuthController(
         response: HttpServletResponse,
         @RequestBody req: RefreshAccessTokenRequestDto?,
     ): SuccessResponse<RefreshAccessTokenResponseDto> {
+        
         val currentRefreshToken : String?
         if(clientType == "web") {
             currentRefreshToken = refreshToken
         } else {
             currentRefreshToken = req?.refreshToken
         }
-        val (accessToken, newRefreshToken, accessTokenExpiredAt, refreshTokenExpiredAt) = authService.refreshAccessToken(
+        val (accessToken, newRefreshToken) = authService.refreshAccessToken(
             currentRefreshToken!!, req?.deviceId,
-            clientType = clientType
         )
+        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer ${accessToken}")
 
         if (clientType == "web") {
             val refreshCookie = ResponseCookie.from("refreshToken", newRefreshToken)
@@ -138,18 +126,13 @@ class AuthController(
                 .sameSite("Lax")
                 .build()
             response.addHeader("Set-Cookie", refreshCookie.toString())
-
-            val resp = RefreshAccessTokenResponseDto.forWeb(
-                accessToken = accessToken,
-                expiredAt = accessTokenExpiredAt
-            )
-            return Responses.success(message = "AccessToken 재발급에 성공했습니다.", data = resp)
+            
+            return Responses.success(message = "AccessToken 재발급에 성공했습니다.", data = null)
         }
+        
         //앱
-        //TODO refreshToken만 쓰도록 수정
         val resp = RefreshAccessTokenResponseDto.forApp(
-            refreshToken = newRefreshToken,
-            refreshExpiredAt = refreshTokenExpiredAt
+            refreshToken = newRefreshToken
         )
         return Responses.success(message = "AccessToken 재발급에 성공했습니다.", data = resp)
 
