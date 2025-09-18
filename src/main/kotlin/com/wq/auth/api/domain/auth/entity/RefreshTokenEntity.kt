@@ -25,9 +25,25 @@ class RefreshTokenEntity(
     val opaqueId: String,
 
     @Column(name = "device_id", nullable = true, length = 64)
-    val deviceId: String? = null // 웹이면 null, 앱이면 UUID
+    val deviceId: String? = null, // 웹이면 null, 앱이면 UUID
+
+    @Column(name = "deleted_at", nullable = true)
+    var deletedAt: Instant? = null
 
 )  : BaseEntity() {
+
+    /**
+     * Soft delete 처리
+     */
+    fun softDelete() {
+        this.deletedAt = Instant.now()
+    }
+
+    /**
+     * 삭제 여부 확인
+     */
+    fun isDeleted(): Boolean = deletedAt != null
+
     companion object {
         fun of(member: MemberEntity, jti: String, opaqueId: String, deviceId: String?= null): RefreshTokenEntity {
             return RefreshTokenEntity(

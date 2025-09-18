@@ -49,11 +49,11 @@ class AuthService(
                 extraClaims = mapOf("deviceId" to deviceId)
             )
 
-        val existingRefreshToken = refreshTokenRepository.findByMemberAndDeviceId(existingUser, deviceId)
+        val existingRefreshToken = refreshTokenRepository.findActiveByMemberAndDeviceId(existingUser, deviceId)
 
-        //이전 리프레시토큰 삭제
+        //이전 리프레시토큰 soft delete 처리
         if (existingRefreshToken != null) {
-            refreshTokenRepository.delete(existingRefreshToken)
+            refreshTokenRepository.softDeleteByMemberAndDeviceId(existingUser, deviceId, Instant.now())
         }
 
         val refreshToken = jwtProvider.createRefreshToken(opaqueId = existingUser.opaqueId)
@@ -113,10 +113,10 @@ class AuthService(
             // 토큰 유효성 검사
             jwtProvider.validateOrThrow(refreshToken)
             
-            // 유효한 토큰인 경우 DB에서 삭제
+            // 유효한 토큰인 경우 soft delete 처리
             val opaqueId = jwtProvider.getOpaqueId(refreshToken)
             val jti = jwtProvider.getJti(refreshToken)
-            refreshTokenRepository.deleteByOpaqueIdAndJti(opaqueId, jti)
+            refreshTokenRepository.softDeleteByOpaqueIdAndJti(opaqueId, jti, Instant.now())
             
         } catch (e: JwtException) {
             // 만료된 토큰이어도 로그아웃 성공으로 처리
@@ -136,12 +136,12 @@ class AuthService(
         val opaqueId = jwtProvider.getOpaqueId(refreshToken)
 
         //토큰 jti+opaqueId로 DB에 있는지 확인
-        val refreshTokenEntity = refreshTokenRepository.findByOpaqueIdAndJti(opaqueId, jti)
+        val refreshTokenEntity = refreshTokenRepository.findActiveByOpaqueIdAndJti(opaqueId, jti)
             ?: throw JwtException(JwtExceptionCode.MALFORMED)
 
         //토큰 엔티티 만료 기간 확인
         if (refreshTokenEntity.expiredAt?.isBefore(Instant.now()) == true) {
-            refreshTokenRepository.delete(refreshTokenEntity)
+            refreshTokenRepository.softDeleteByOpaqueIdAndJti(opaqueId, jti, Instant.now())
             throw JwtException(JwtExceptionCode.EXPIRED)
         }
 
@@ -154,9 +154,8 @@ class AuthService(
         val newRefreshToken = jwtProvider.createRefreshToken(opaqueId = opaqueId)
         val newJti = jwtProvider.getJti(newRefreshToken)
 
-        // 기존 RefreshToken 삭제
-        //TODO soft-delete로 수정
-        refreshTokenRepository.delete(refreshTokenEntity)
+        // 기존 RefreshToken soft delete 처리
+        refreshTokenRepository.softDeleteByOpaqueIdAndJti(opaqueId, jti, Instant.now())
 
         // 새 refreshToken 저장
         val member = memberRepository.findByOpaqueId(opaqueId).get()
