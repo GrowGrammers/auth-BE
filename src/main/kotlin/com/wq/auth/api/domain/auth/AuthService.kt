@@ -136,11 +136,10 @@ class AuthService(
         val opaqueId = jwtProvider.getOpaqueId(refreshToken)
 
         //토큰 jti+opaqueId로 DB에 있는지 확인
-        val refreshTokenEntity = refreshTokenRepository.findActiveByOpaqueIdAndJti(opaqueId, jti)
-            ?: throw JwtException(JwtExceptionCode.MALFORMED)
+        refreshTokenRepository.findActiveByOpaqueIdAndJti(opaqueId, jti)?: throw JwtException(JwtExceptionCode.MALFORMED)
 
         //토큰 엔티티 만료 기간 확인
-        if (refreshTokenEntity.expiredAt?.isBefore(Instant.now()) == true) {
+        if (jwtProvider.getRefreshTokenExpiredAt(refreshToken).isBefore(Instant.now())) {
             refreshTokenRepository.softDeleteByOpaqueIdAndJti(opaqueId, jti, Instant.now())
             throw JwtException(JwtExceptionCode.EXPIRED)
         }

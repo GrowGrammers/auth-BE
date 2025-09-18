@@ -18,9 +18,6 @@ class RefreshTokenEntity(
     @Column(nullable = false, unique = true)
     var jti: String,
 
-    @Column(name = "expired_at", nullable = true)
-    var expiredAt: Instant? = null,
-
     @Column(name = "opaque_id", nullable = false, length = 64)
     val opaqueId: String,
 

@@ -130,6 +130,15 @@ class JwtProvider(
     fun getAccessTokenExpirationSeconds(): Long = jwtProperties.accessExp.toSeconds()
 
     /**
+     * RefreshToken의 만료 시각을 반환합니다.
+     */
+    fun getRefreshTokenExpiredAt(token: String): Instant =
+        Jwts.parser().verifyWith(key)
+            .build().parseSignedClaims(token)
+            .payload
+            .expiration.toInstant()
+
+    /**
      * 유효성 검사(예외 던짐) – 표준 에러로 변환
      * 컨트롤러/서비스에서 이 메서드를 사용하면 GlobalExceptionHandler가 잡아줍니다.
      */
