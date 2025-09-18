@@ -20,11 +20,16 @@ class AuthEmailService(
         validateDomain(email)
 
         val code = generateRandomCode()
+        //TODO
+        //인증번호 5분 제한
+        //제거시 soft delete
         sendEmail(email, "인증 코드", "인증 코드는 $code 입니다.")
         emailRepository.save(EmailVerificationEntity(email, code))
     }
 
     fun verifyCode(email: String, code: String) {
+        //TODO
+        //List로 받아서 0번으로 받기
         val savedCode = emailRepository.findByEmail(email)?.code
 
         if (savedCode == null || savedCode != code) {

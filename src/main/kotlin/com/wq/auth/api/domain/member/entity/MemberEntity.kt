@@ -39,6 +39,9 @@ open class MemberEntity protected constructor(
     @Column(name = "last_login_at")
     var lastLoginAt: LocalDateTime? = null,
 
+    //TODO
+    //회원 삭제 기능 개발시 모든 쿼리 is_deleted 확인 추가
+    //is_deleted -> deleted_at?
     @Column(name = "is_deleted", nullable = false)
     var isDeleted: Boolean = false,
 
