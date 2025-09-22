@@ -1,0 +1,234 @@
+package com.wq.auth.api.controller.auth
+
+import com.wq.auth.api.controller.auth.request.EmailLoginRequestDto
+import com.wq.auth.api.controller.auth.request.LogoutRequestDto
+import com.wq.auth.api.controller.auth.request.RefreshAccessTokenRequestDto
+import com.wq.auth.api.controller.auth.response.LoginResponseDto
+import com.wq.auth.api.controller.auth.response.RefreshAccessTokenResponseDto
+import com.wq.auth.api.domain.auth.AuthService
+import com.wq.auth.api.domain.email.AuthEmailService
+import com.wq.auth.security.annotation.PublicApi
+import com.wq.auth.security.jwt.JwtProperties
+import com.wq.auth.web.common.response.BaseResponse
+import com.wq.auth.web.common.response.FailResponse
+import com.wq.auth.web.common.response.Responses
+import com.wq.auth.web.common.response.SuccessResponse
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseCookie
+import org.springframework.web.bind.annotation.*
+
+@Tag(name = "회원", description = "로그인, 로그아웃 등 회원 관련 API")
+@RestController
+class AuthController(
+    private val authService: AuthService,
+    private val emailService: AuthEmailService,
+    private val jwtProperties: JwtProperties,
+) {
+
+    @Operation(
+        summary = "이메일 로그인",
+        description = "회원 가입을 한 사용자 라면, 회원 이메일로 로그인하고 회원 가입을 하지 않은 사용자라면 회원가입 후 AccessToken과 RefreshToken을 발급합니다."
+    )
+
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "로그인 성공",
+                content = [Content(schema = Schema(implementation = SuccessResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "이메일 인증 실패",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "회원 정보를 저장하는데 실패했습니다.",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            )
+        ]
+    )
+    @PostMapping("api/v1/auth/members/email-login")
+    @PublicApi
+    fun emailLogin(
+        response: HttpServletResponse,
+        @RequestHeader("X-Client-Type", required = true) clientType: String,
+        @RequestBody req: EmailLoginRequestDto,
+
+        ): SuccessResponse<LoginResponseDto> {
+        emailService.verifyCode(req.email, req.verifyCode)
+        val (accessToken, newRefreshToken) = authService.emailLogin(
+            req.email,
+            deviceId = req.deviceId,
+        )
+
+        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer ${accessToken}")
+
+        if (clientType == "web") {
+            val refreshCookie = ResponseCookie.from("refreshToken", newRefreshToken)
+                .httpOnly(true)
+                //.secure(true) 배포시
+                .secure(false)
+                .path("/")
+                .maxAge(jwtProperties.refreshExp.toSeconds())
+                //.sameSite("None") 배포시
+                .sameSite("Lax")
+                .build()
+            response.addHeader("Set-Cookie", refreshCookie.toString())
+
+            return Responses.success(message = "로그인에 성공했습니다.", data = null)
+        }
+
+        //앱
+        val resp = LoginResponseDto.forApp(
+            refreshToken = newRefreshToken
+        )
+        return Responses.success(message = "로그인에 성공했습니다.", data = resp)
+    }
+
+    @Operation(
+        summary = "로그아웃",
+        description = "RefreshToken을 DB에서 삭제하여 로그아웃합니다."
+    )
+
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "로그아웃 성공",
+                content = [Content(schema = Schema(implementation = SuccessResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "로그아웃에 실패했습니다.",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            )
+        ]
+    )
+
+    @PostMapping("api/v1/auth/members/logout")
+    @PublicApi
+    fun logout(
+        @CookieValue(name = "refreshToken", required = false) refreshToken: String?,
+        response: HttpServletResponse,
+        @RequestHeader(name = "X-Client-Type", required = true) clientType: String,
+        @RequestBody req: LogoutRequestDto?
+    ): SuccessResponse<Void?> {
+
+        val currentRefreshToken = when (clientType) {
+            "web" -> refreshToken
+            "app" -> req?.refreshToken
+            else -> null
+        }
+
+        authService.logout(currentRefreshToken)
+
+        if (clientType == "web") {
+            val refreshCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                //.secure(true) 배포시
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                //.sameSite("None") 배포시
+                .sameSite("Lax")
+                .build()
+            response.addHeader("Set-Cookie", refreshCookie.toString())
+
+        }
+        //앱
+        return Responses.success(message = "로그아웃에 성공했습니다.", data = null)
+    }
+
+    @Operation(
+        summary = "액세스 토큰 재발급",
+        description = "유효한 리프레시 토큰을 이용해 새로운 액세스 토큰과 리프레시 토큰을 발급합니다."
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "액세스 토큰 재발급 성공",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = RefreshAccessTokenResponseDto::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "잘못된 요청, 인증 토큰이 없음, Authorization 헤더는 'Bearer <token>' 형식이어야 합니다.",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = BaseResponse::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "유효하지 않은 토큰, 만료된 토큰, 유효하지 않은 서명, 지원되지 않는 토큰",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = BaseResponse::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "refreshToken 조회 실패",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = BaseResponse::class)
+                )]
+            )
+        ]
+    )
+    @PostMapping("api/v1/auth/members/refresh")
+    @PublicApi
+    fun refreshAccessToken(
+        @CookieValue(name = "refreshToken", required = false) refreshToken: String,
+        @RequestHeader("X-Client-Type") clientType: String,
+        response: HttpServletResponse,
+        @RequestBody req: RefreshAccessTokenRequestDto?,
+    ): SuccessResponse<RefreshAccessTokenResponseDto> {
+        
+        val currentRefreshToken : String?
+        if(clientType == "web") {
+            currentRefreshToken = refreshToken
+        } else {
+            currentRefreshToken = req?.refreshToken
+        }
+        val (accessToken, newRefreshToken) = authService.refreshAccessToken(
+            currentRefreshToken!!, req?.deviceId,
+        )
+        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer ${accessToken}")
+
+        if (clientType == "web") {
+            val refreshCookie = ResponseCookie.from("refreshToken", newRefreshToken)
+                .httpOnly(true)
+                //.secure(true) 배포시
+                .secure(false)
+                .path("/")
+                .maxAge(jwtProperties.refreshExp.toSeconds())
+                //.sameSite("None") 배포시
+                .sameSite("Lax")
+                .build()
+            response.addHeader("Set-Cookie", refreshCookie.toString())
+            
+            return Responses.success(message = "AccessToken 재발급에 성공했습니다.", data = null)
+        }
+        
+        //앱
+        val resp = RefreshAccessTokenResponseDto.forApp(
+            refreshToken = newRefreshToken
+        )
+        return Responses.success(message = "AccessToken 재발급에 성공했습니다.", data = resp)
+
+    }
+
+}

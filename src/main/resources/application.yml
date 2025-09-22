@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: auth-BE
+
+  profiles:
+    active: dev, jwt, oauth  # 공통으로 항상 적용되는 프로파일
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  jackson:
+    time-zone: UTC
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: ${SWAGGER_PATH}
+
+app:
+  time:
+    default-zone: ${APP_DEFAULT_ZONE:Asia/Seoul}
+  cookie:
+    same-site: ${APP_COOKIE_SAME_SITE:Strict}
