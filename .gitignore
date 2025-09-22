@@ -9,9 +9,6 @@
 # 환경 변수
 .env
 
-# 배포 서버 설정 파일
-/application-prod.yml
-
 .idea
 
 # Created by git when using merge tools for conflicts
