@@ -38,6 +38,8 @@ dependencies {
 	runtimeOnly("com.h2database:h2")
 	implementation("org.springframework.boot:spring-boot-starter-logging")
 	implementation("io.github.oshai:kotlin-logging-jvm:5.1.4")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0")
+	implementation("mysql:mysql-connector-java:8.0.33")
 
 	// oauth
 	implementation("com.google.api-client:google-api-client:2.7.0")
@@ -50,8 +52,6 @@ dependencies {
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0")
-
 
 	// Kotest 버전 변수로 관리
 	val kotestVersion = "5.9.1"

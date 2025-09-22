@@ -1,11 +1,9 @@
 spring:
-  profiles:
-    active:
-      - jwt
-      - oauth
-
   application:
     name: auth-BE
+
+  profiles:
+    active: dev, jwt, oauth  # 공통으로 항상 적용되는 프로파일
 
   mail:
     host: smtp.gmail.com
@@ -19,30 +17,8 @@ spring:
           starttls:
             enable: true
 
-  datasource:
-    url: ${DB_URL:jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
-    driver-class-name: ${DB_DRIVER:org.h2.Driver}
-    username: ${DB_USERNAME:sa}
-    password: ${DB_PASSWORD:}
-
-  jpa:
-    hibernate:
-      ddl-auto: ${DDL_AUTO:update}
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        use_sql_comments: true
-        jdbc:
-          time_zone: UTC
-
   jackson:
     time-zone: UTC
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
 
 springdoc:
   api-docs:
@@ -52,14 +28,6 @@ springdoc:
 
 app:
   time:
-    default-zone: ${APP_DEFAULT_ZONE:Asia/Seoul} # 환경변수 APP_DEFAULT_ZONE이 있으면 그걸 쓰고, 없으면 Asia/Seoul
+    default-zone: ${APP_DEFAULT_ZONE:Asia/Seoul}
   cookie:
-    secure: ${APP_COOKIE_SECURE:false} # 개발환경: false, 프로덕션: true (HTTPS)
-    same-site: ${APP_COOKIE_SAME_SITE:Strict} # CSRF 방지: Strict/Lax/None
-
-logging:
-  level:
-    org.hibernate.SQL: debug
-    org.hibernate.type.descriptor.sql.BasicBinder: trace
-    org.springframework.orm.jpa: debug
-    org.springframework.boot.autoconfigure.orm.jpa: debug
+    same-site: ${APP_COOKIE_SAME_SITE:Strict}
