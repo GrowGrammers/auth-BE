@@ -8,14 +8,15 @@ import com.wq.auth.api.domain.member.entity.Role
 import com.wq.auth.api.domain.auth.error.AuthException
 import com.wq.auth.api.domain.auth.error.AuthExceptionCode
 import com.wq.auth.api.domain.member.MemberRepository
-import com.wq.auth.security.jwt.JwtProperties
 import com.wq.auth.security.jwt.JwtProvider
 import com.wq.auth.security.jwt.error.JwtException
 import com.wq.auth.security.jwt.error.JwtExceptionCode
 import com.wq.auth.shared.utils.NicknameGenerator
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
+import java.time.LocalDateTime
 
 @Service
 class AuthService(
@@ -25,21 +26,19 @@ class AuthService(
     private val refreshTokenRepository: RefreshTokenRepository,
     private val jwtProvider: JwtProvider,
     private val nicknameGenerator: NicknameGenerator,
-    private val jwtProperties: JwtProperties,
 
     ) {
+    private val log = KotlinLogging.logger {}
 
     data class TokenResult(
         val accessToken: String,
         val refreshToken: String,
-        val accessTokenExpiredAt: Long,
-        val refreshTokenExpiredAt: Long
     )
 
     @Transactional
-    fun emailLogin(email: String, deviceId: String?, clientType: String): TokenResult {
+    fun emailLogin(email: String, deviceId: String?): TokenResult {
         val existingUser =
-            authProviderRepository.findByEmail(email)?.member ?: return signUp(email, deviceId, clientType)
+            authProviderRepository.findByEmail(email)?.member ?: return signUp(email, deviceId)
 
         // 이미 가입된 사용자 → 로그인 처리 및 JWT 발급
         val opaqueId = existingUser.opaqueId
@@ -50,35 +49,26 @@ class AuthService(
                 extraClaims = mapOf("deviceId" to deviceId)
             )
 
-        val existingRefreshToken = refreshTokenRepository.findByMemberAndDeviceId(existingUser, deviceId)
+        val existingRefreshToken = refreshTokenRepository.findActiveByMemberAndDeviceId(existingUser, deviceId)
 
-        //이전 리프레시토큰 삭제
+        //이전 리프레시토큰 soft delete 처리
         if (existingRefreshToken != null) {
-            refreshTokenRepository.delete(existingRefreshToken)
+            refreshTokenRepository.softDeleteByMemberAndDeviceId(existingUser, deviceId, Instant.now())
         }
 
         val refreshToken = jwtProvider.createRefreshToken(opaqueId = existingUser.opaqueId)
         val jti = jwtProvider.getJti(refreshToken)
 
-        val now = System.currentTimeMillis()
-        val accessTokenExpiredAt = now + jwtProperties.accessExp.toMillis()
-        val refreshTokenExpiredAt = Instant.now().plus(jwtProperties.refreshExp)
-
-        val refreshTokenEntity: RefreshTokenEntity
-        if (clientType == "app") {
-            refreshTokenEntity =
-                RefreshTokenEntity.ofApp(existingUser, jti, refreshTokenExpiredAt, opaqueId, deviceId!!)
-        } else {
-            refreshTokenEntity = RefreshTokenEntity.ofWeb(existingUser, jti, refreshTokenExpiredAt, opaqueId)
-        }
+        val refreshTokenEntity = RefreshTokenEntity.of(existingUser, jti, opaqueId, deviceId)
         refreshTokenRepository.save(refreshTokenEntity)
+        existingUser.lastLoginAt = LocalDateTime.now()
 
-        return TokenResult(accessToken, refreshToken, accessTokenExpiredAt, refreshTokenExpiredAt.toEpochMilli())
+        return TokenResult(accessToken, refreshToken)
 
     }
 
     @Transactional
-    fun signUp(email: String, deviceId: String?, clientType: String): TokenResult {
+    fun signUp(email: String, deviceId: String?): TokenResult {
 
         authEmailService.validateEmailFormat(email)
 
@@ -87,7 +77,7 @@ class AuthService(
             nickname = nicknameGenerator.generate()
             //중복 닉네임인 경우
         } while (memberRepository.existsByNickname(nickname))
-        val member = MemberEntity.createEmailVerifiedMember(nickname)
+        val member = MemberEntity.createEmailVerifiedMember(nickname, email)
         val opaqueId = member.opaqueId
 
         try {
@@ -106,36 +96,39 @@ class AuthService(
         val refreshToken = jwtProvider.createRefreshToken(opaqueId = member.opaqueId)
         val jti = jwtProvider.getJti(refreshToken)
 
-        val now = System.currentTimeMillis()
-        val accessTokenExpiredAt = now + jwtProperties.accessExp.toMillis()
-        val refreshTokenExpiredAt = Instant.now().plus(jwtProperties.refreshExp)
-
-        val refreshTokenEntity: RefreshTokenEntity
-        if (clientType == "app") {
-            refreshTokenEntity = RefreshTokenEntity.ofApp(member, jti, refreshTokenExpiredAt, opaqueId, deviceId!!)
-        } else {
-            refreshTokenEntity = RefreshTokenEntity.ofWeb(member, jti, refreshTokenExpiredAt, opaqueId)
-        }
+        val refreshTokenEntity = RefreshTokenEntity.of(member, jti, opaqueId, deviceId)
         refreshTokenRepository.save(refreshTokenEntity)
 
-        return TokenResult(accessToken, refreshToken, accessTokenExpiredAt, refreshTokenExpiredAt.toEpochMilli())
+        return TokenResult(accessToken, refreshToken)
     }
 
     @Transactional
-    fun logout(refreshToken: String) {
-        val opaqueId = jwtProvider.getOpaqueId(refreshToken)
-        val jti = jwtProvider.getJti(refreshToken)
+    fun logout(refreshToken: String?) {
+        if (refreshToken.isNullOrBlank()) {
+            log.info { "refreshToken이 없는 상태로 로그아웃 시도" }
+            return
+        }
+
         try {
-            refreshTokenRepository.deleteByOpaqueIdAndJti(opaqueId, jti)
+            // 토큰 유효성 검사
+            jwtProvider.validateOrThrow(refreshToken)
+            
+            // 유효한 토큰인 경우 soft delete 처리
+            val opaqueId = jwtProvider.getOpaqueId(refreshToken)
+            val jti = jwtProvider.getJti(refreshToken)
+            refreshTokenRepository.softDeleteByOpaqueIdAndJti(opaqueId, jti, Instant.now())
+            
+        } catch (e: JwtException) {
+            // 만료된 토큰이어도 로그아웃 성공으로 처리
+            log.info { "만료된 refreshToken으로 로그아웃: ${e.message}" }
         } catch (ex: Exception) {
+            // DB 삭제 실패 시에만 예외 발생
             throw AuthException(AuthExceptionCode.LOGOUT_FAILED, ex)
         }
     }
 
-    //TODO
-    //모바일 재발급의 경우
     @Transactional
-    fun refreshAccessToken(refreshToken: String, deviceId: String?, clientType: String): TokenResult {
+    fun refreshAccessToken(refreshToken: String, deviceId: String?): TokenResult {
         //토큰 유효성 검사
         jwtProvider.validateOrThrow(refreshToken)
 
@@ -143,16 +136,15 @@ class AuthService(
         val opaqueId = jwtProvider.getOpaqueId(refreshToken)
 
         //토큰 jti+opaqueId로 DB에 있는지 확인
-        val refreshTokenEntity = refreshTokenRepository.findByOpaqueIdAndJti(opaqueId, jti)
-            ?: throw JwtException(JwtExceptionCode.MALFORMED)
+        refreshTokenRepository.findActiveByOpaqueIdAndJti(opaqueId, jti)?: throw JwtException(JwtExceptionCode.MALFORMED)
 
         //토큰 엔티티 만료 기간 확인
-        if (refreshTokenEntity.expiredAt?.isBefore(Instant.now()) == true) {
-            refreshTokenRepository.delete(refreshTokenEntity)
+        if (jwtProvider.getRefreshTokenExpiredAt(refreshToken).isBefore(Instant.now())) {
+            refreshTokenRepository.softDeleteByOpaqueIdAndJti(opaqueId, jti, Instant.now())
             throw JwtException(JwtExceptionCode.EXPIRED)
         }
 
-        // 5. AccessToken, RefreshToken 재발급
+        // AccessToken, RefreshToken 재발급
         val newAccessToken = jwtProvider.createAccessToken(
             opaqueId = opaqueId,
             role = Role.MEMBER,
@@ -161,24 +153,15 @@ class AuthService(
         val newRefreshToken = jwtProvider.createRefreshToken(opaqueId = opaqueId)
         val newJti = jwtProvider.getJti(newRefreshToken)
 
-        // 기존 RefreshToken 삭제
-        refreshTokenRepository.delete(refreshTokenEntity)
+        // 기존 RefreshToken soft delete 처리
+        refreshTokenRepository.softDeleteByOpaqueIdAndJti(opaqueId, jti, Instant.now())
 
-        val now = System.currentTimeMillis()
-        val accessTokenExpiredAt = now + jwtProperties.accessExp.toMillis()
-        val refreshTokenExpiredAt = Instant.now().plus(jwtProperties.refreshExp)
+        // 새 refreshToken 저장
         val member = memberRepository.findByOpaqueId(opaqueId).get()
-
-        val newRefreshTokenEntity: RefreshTokenEntity
-        if (clientType == "app") {
-            newRefreshTokenEntity =
-                RefreshTokenEntity.ofApp(member, newJti, refreshTokenExpiredAt, opaqueId, deviceId!!)
-        } else {
-            newRefreshTokenEntity = RefreshTokenEntity.ofWeb(member, newJti, refreshTokenExpiredAt, opaqueId)
-        }
+        val newRefreshTokenEntity = RefreshTokenEntity.of(member, newJti, opaqueId, deviceId)
         refreshTokenRepository.save(newRefreshTokenEntity)
 
-        return TokenResult(newAccessToken, newRefreshToken, accessTokenExpiredAt, refreshTokenExpiredAt.toEpochMilli())
+        return TokenResult(newAccessToken, newRefreshToken)
     }
 
 }

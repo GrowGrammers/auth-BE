@@ -54,6 +54,7 @@ class SocialLoginService(
             ProviderType.KAKAO -> throw SocialLoginException(SocialLoginExceptionCode.UNSUPPORTED_PROVIDER)
             ProviderType.NAVER -> throw SocialLoginException(SocialLoginExceptionCode.UNSUPPORTED_PROVIDER)
             ProviderType.EMAIL -> throw SocialLoginException(SocialLoginExceptionCode.UNSUPPORTED_PROVIDER)
+            ProviderType.PHONE -> throw SocialLoginException(SocialLoginExceptionCode.UNSUPPORTED_PROVIDER)
         }
     }
 
@@ -123,19 +124,12 @@ class SocialLoginService(
             return Pair(existingAuthProvider.get().member, false)
         }
 
-        // MemberEntity의 providerId로도 확인 (기존 데이터 호환성)
-        val existingMember = memberRepository.findByProviderId(oauthUser.providerId)
-        if (existingMember.isPresent) {
-            log.info { "기존 회원 발견 (providerId 기준): ${existingMember.get().opaqueId}" }
-            return Pair(existingMember.get(), false)
-        }
-
         // 신규 회원 생성
         log.info { "신규 회원 생성: ${oauthUser.email}" }
         val newMember = MemberEntity.Companion.createSocialMember(
-            providerId = oauthUser.providerId,
             nickname = oauthUser.getNickname(),
-            isEmailVerified = oauthUser.verifiedEmail
+            isEmailVerified = oauthUser.verifiedEmail,
+            primaryEmail = oauthUser.email
         )
 
         val savedMember = memberRepository.save(newMember)

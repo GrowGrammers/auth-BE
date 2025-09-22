@@ -61,16 +61,12 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                     val deviceId: String? = null
                     val newAccessToken = "new-access-token"
                     val newRefreshToken = "new-refresh-token"
-                    val accessTokenExpiredAt = System.currentTimeMillis() + 3600000
-                    val refreshTokenExpiredAt = System.currentTimeMillis() + (7 * 24 * 3600000)
 
                     val tokenResult = AuthService.TokenResult(
                         newAccessToken,
-                        newRefreshToken,
-                        accessTokenExpiredAt,
-                        refreshTokenExpiredAt
+                        newRefreshToken
                     )
-                    given(authService.refreshAccessToken(refreshToken, deviceId, clientType))
+                    given(authService.refreshAccessToken(refreshToken, deviceId))
                         .willReturn(tokenResult)
                     given(jwtProperties.refreshExp).willReturn(Duration.ofDays(7))
 
@@ -91,8 +87,7 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                         .andExpect(status().isOk)
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.message").value("AccessToken 재발급에 성공했습니다."))
-                        .andExpect(jsonPath("$.data.accessToken").value(newAccessToken))
-                        .andExpect(jsonPath("$.data.expiredAt").value(accessTokenExpiredAt))
+                        // web 응답은 data null, 헤더만 검증
                         .andExpect(
                             header().string(
                                 "Set-Cookie",
@@ -102,7 +97,7 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                         .andExpect(header().string("Set-Cookie", Matchers.containsString("HttpOnly")))
                         .andExpect(header().string("Set-Cookie", Matchers.containsString("SameSite=Lax")))
 
-                    verify(authService).refreshAccessToken(refreshToken, deviceId, clientType)
+                    verify(authService).refreshAccessToken(refreshToken, deviceId)
                 }
             }
 
@@ -114,16 +109,12 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                     val deviceId = "device123"
                     val newAccessToken = "new-access-token"
                     val newRefreshToken = "new-refresh-token"
-                    val accessTokenExpiredAt = System.currentTimeMillis() + 3600000
-                    val refreshTokenExpiredAt = System.currentTimeMillis() + (7 * 24 * 3600000)
 
                     val tokenResult = AuthService.TokenResult(
                         newAccessToken,
-                        newRefreshToken,
-                        accessTokenExpiredAt,
-                        refreshTokenExpiredAt
+                        newRefreshToken
                     )
-                    given(authService.refreshAccessToken(refreshToken, deviceId, clientType))
+                    given(authService.refreshAccessToken(refreshToken, deviceId))
                         .willReturn(tokenResult)
 
                     val requestBody = """{"refreshToken": "$refreshToken", "deviceId": "$deviceId"}"""
@@ -131,6 +122,7 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                     // when & then
                     mockMvc.perform(
                         post("/api/v1/auth/members/refresh")
+                            .cookie(Cookie("refreshToken", refreshToken))
                             .header("X-Client-Type", clientType)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody)
@@ -141,10 +133,9 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.message").value("AccessToken 재발급에 성공했습니다."))
                         .andExpect(jsonPath("$.data.refreshToken").value(newRefreshToken))
-                        .andExpect(jsonPath("$.data.refreshExpiredAt").value(refreshTokenExpiredAt))
                         .andExpect(header().doesNotExist("Set-Cookie"))
 
-                    verify(authService).refreshAccessToken(refreshToken, deviceId, clientType)
+                    verify(authService).refreshAccessToken(refreshToken, deviceId)
                 }
             }
 
@@ -156,7 +147,7 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                     val deviceId: String? = null
                     val requestBody = """{"deviceId": null}"""
 
-                    given(authService.refreshAccessToken(refreshToken, deviceId, clientType))
+                    given(authService.refreshAccessToken(refreshToken, deviceId))
                         .willThrow(JwtException(JwtExceptionCode.MALFORMED))
 
                     // when & then
@@ -170,7 +161,7 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                             .with(user("testUser").roles("USER"))
                     ).andExpect(status().isUnauthorized)
 
-                    verify(authService).refreshAccessToken(refreshToken, deviceId, clientType)
+                    verify(authService).refreshAccessToken(refreshToken, deviceId)
                 }
             }
 
@@ -182,12 +173,13 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                     val deviceId = "device123"
                     val requestBody = """{"refreshToken": "$refreshToken", "deviceId": "$deviceId"}"""
 
-                    given(authService.refreshAccessToken(refreshToken, deviceId, clientType))
+                    given(authService.refreshAccessToken(refreshToken, deviceId))
                         .willThrow(JwtException(JwtExceptionCode.EXPIRED))
 
                     // when & then
                     mockMvc.perform(
                         post("/api/v1/auth/members/refresh")
+                            .cookie(Cookie("refreshToken", refreshToken))
                             .header("X-Client-Type", clientType)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody)
@@ -195,7 +187,7 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                             .with(user("testUser").roles("USER"))
                     ).andExpect(status().isUnauthorized)
 
-                    verify(authService).refreshAccessToken(refreshToken, deviceId, clientType)
+                    verify(authService).refreshAccessToken(refreshToken, deviceId)
                 }
             }
         }
@@ -211,17 +203,13 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                     val deviceId: String? = null
                     val accessToken = "access-token"
                     val refreshToken = "refresh-token"
-                    val accessTokenExpiredAt = System.currentTimeMillis() + 3600000
-                    val refreshTokenExpiredAt = System.currentTimeMillis() + (7 * 24 * 3600000)
 
                     val tokenResult = AuthService.TokenResult(
                         accessToken,
-                        refreshToken,
-                        accessTokenExpiredAt,
-                        refreshTokenExpiredAt
+                        refreshToken
                     )
 
-                    given(authService.emailLogin(email, deviceId, clientType)).willReturn(tokenResult)
+                    given(authService.emailLogin(email, deviceId)).willReturn(tokenResult)
                     given(jwtProperties.refreshExp).willReturn(Duration.ofDays(7))
 
                     val requestBody = """{"email": "$email", "verifyCode": "$verifyCode", "deviceId": null}"""
@@ -238,8 +226,7 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                         .andExpect(status().isOk)
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.message").value("로그인에 성공했습니다."))
-                        .andExpect(jsonPath("$.data.accessToken").value(accessToken))
-                        .andExpect(jsonPath("$.data.expiredAt").value(accessTokenExpiredAt))
+                        .andExpect(header().string("Authorization", Matchers.containsString("Bearer ")))
                         .andExpect(
                             header().string(
                                 "Set-Cookie",
@@ -248,7 +235,7 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                         )
 
                     verify(authEmailService).verifyCode(email, verifyCode)
-                    verify(authService).emailLogin(email, deviceId, clientType)
+                    verify(authService).emailLogin(email, deviceId)
                 }
             }
 
@@ -261,17 +248,13 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                     val deviceId = "device123"
                     val accessToken = "access-token"
                     val refreshToken = "refresh-token"
-                    val accessTokenExpiredAt = System.currentTimeMillis() + 3600000
-                    val refreshTokenExpiredAt = System.currentTimeMillis() + (7 * 24 * 3600000)
 
                     val tokenResult = AuthService.TokenResult(
                         accessToken,
-                        refreshToken,
-                        accessTokenExpiredAt,
-                        refreshTokenExpiredAt
+                        refreshToken
                     )
 
-                    given(authService.emailLogin(email, deviceId, clientType)).willReturn(tokenResult)
+                    given(authService.emailLogin(email, deviceId)).willReturn(tokenResult)
 
                     val requestBody = """{"email": "$email", "verifyCode": "$verifyCode", "deviceId": "$deviceId"}"""
 
@@ -288,11 +271,10 @@ class AuthControllerIntegrationTest : DescribeSpec() {
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.message").value("로그인에 성공했습니다."))
                         .andExpect(jsonPath("$.data.refreshToken").value(refreshToken))
-                        .andExpect(jsonPath("$.data.refreshExpiredAt").value(refreshTokenExpiredAt))
                         .andExpect(header().doesNotExist("Set-Cookie"))
 
                     verify(authEmailService).verifyCode(email, verifyCode)
-                    verify(authService).emailLogin(email, deviceId, clientType)
+                    verify(authService).emailLogin(email, deviceId)
                 }
             }
         }

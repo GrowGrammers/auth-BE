@@ -28,6 +28,9 @@ class MemberService(
         if (authProviders.isEmpty()) {
             throw MemberException(MemberExceptionCode.USER_INFO_RETRIEVE_FAILED)
         }
+        //자체 회원가입에 우선순위를 두고 정보를 주고 있음
+        //TODO
+        //primaryEmail 가져오는 것으로 변경 + 전화번호 까지
         val email = authProviders
             .sortedBy { provider ->
                 when (provider.providerType) {

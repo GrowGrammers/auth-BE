@@ -17,8 +17,11 @@ open class MemberEntity protected constructor(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
-    @Column(name = "provider_id")
-    val providerId: String? = null,
+    @Column(name = "primary_email", nullable = true)
+    val primaryEmail: String? = null,
+
+    @Column(name = "phone_number", length = 20, nullable = true)
+    val phoneNumber: String? = null,
 
     @Column(name = "opaque_id", nullable = false, unique = true, length = 36)
     val opaqueId: String,
@@ -36,17 +39,22 @@ open class MemberEntity protected constructor(
     @Column(name = "last_login_at")
     var lastLoginAt: LocalDateTime? = null,
 
+    //TODO
+    //회원 삭제 기능 개발시 모든 쿼리 is_deleted 확인 추가
+    //is_deleted -> deleted_at?
     @Column(name = "is_deleted", nullable = false)
     var isDeleted: Boolean = false,
 
 ) : BaseEntity() {
 
     companion object {
-        fun createEmailVerifiedMember(nickname: String) =
+        fun createEmailVerifiedMember(nickname: String, email: String) =
             MemberEntity(
                 nickname = nickname,
                 isEmailVerified = true,
+                primaryEmail = email,
                 opaqueId = UUID.randomUUID().toString(),
+                lastLoginAt = LocalDateTime.now(),
             )
 
         fun create(
@@ -57,7 +65,6 @@ open class MemberEntity protected constructor(
             require(nickname.length <= 100) { "닉네임은 100자를 초과할 수 없습니다" }
 
             return MemberEntity(
-                providerId = null,
                 opaqueId = UUID.randomUUID().toString(),
                 nickname = nickname.trim(),
                 role = role
@@ -65,21 +72,20 @@ open class MemberEntity protected constructor(
         }
 
         fun createSocialMember(
-            providerId: String,
             nickname: String,
             isEmailVerified: Boolean = true,
+            primaryEmail: String,
             role: Role = Role.MEMBER
         ): MemberEntity {
-            require(providerId.isNotBlank()) { "소셜 제공자 ID는 필수입니다" }
             require(nickname.isNotBlank()) { "닉네임은 필수입니다" }
             require(nickname.length <= 100) { "닉네임은 100자를 초과할 수 없습니다" }
 
             return MemberEntity(
-                providerId = providerId,
                 opaqueId = UUID.randomUUID().toString(),
                 nickname = nickname.trim(),
                 role = role,
-                isEmailVerified = isEmailVerified
+                isEmailVerified = isEmailVerified,
+                primaryEmail = primaryEmail
             )
         }
     }
