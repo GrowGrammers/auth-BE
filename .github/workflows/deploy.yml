@@ -1,48 +1,57 @@
 name: Deploy to EC2
-
 on:
   push:
     branches:
       - main   # main에 push될 때만 실행
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout source
         uses: actions/checkout@v3
-
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_KEY }}" > ~/.ssh/ec2_key.pem
           chmod 600 ~/.ssh/ec2_key.pem
-
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            cd /home/${USER}/app   # EC2 안에 프로젝트 경로
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd /home/${USER}/app
             git pull origin main
             ./gradlew build -x test
             
-            # 기존 실행 중인 앱 종료 (Spring Boot 기준)
-            pkill -f 'java -jar' || true
-
-            # 모든 환경변수 설정
-            export DB_HOST="${{ secrets.DB_HOST }}"
-            export DB_PORT="${{ secrets.DB_PORT }}"
-            export GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"
-            export GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}"
-            export GOOGLE_REDIRECT_URI="${{ secrets.GOOGLE_REDIRECT_URI }}"
-            export JWT_ACCESS_TOKEN_EXPIRATION="${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION }}"
-            export JWT_REFRESH_TOKEN_EXPIRATION="${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}"
-            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
-            export MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}"
-            export MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}"
-            export SWAGGER_PATH="${{ secrets.SWAGGER_PATH }}"
-            export USER="${{ secrets.USER }}"
+            # systemd 서비스 파일에 모든 환경변수 포함
+            sudo tee /etc/systemd/system/authBE.service > /dev/null << 'SERVICEEOF'
+            [Unit]
+            Description=AuthBE Spring Boot App
+            After=network.target
             
-            nohup java -jar build/libs/*.jar > app.log 2>&1 &
+            [Service]
+            Type=simple
+            User=ec2-user
+            WorkingDirectory=/home/ec2-user/app
+            ExecStart=/usr/bin/java -jar /home/ec2-user/app/build/libs/*.jar
+            Environment="DB_HOST=${{ secrets.DB_HOST }}"
+            Environment="DB_PORT=${{ secrets.DB_PORT }}"
+            Environment="GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}"
+            Environment="GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}"
+            Environment="GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}"
+            Environment="JWT_ACCESS_TOKEN_EXPIRATION=${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION }}"
+            Environment="JWT_REFRESH_TOKEN_EXPIRATION=${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}"
+            Environment="JWT_SECRET=${{ secrets.JWT_SECRET }}"
+            Environment="MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}"
+            Environment="MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}"
+            Environment="SWAGGER_PATH=${{ secrets.SWAGGER_PATH }}"
+            Environment="USER=${{ secrets.USER }}"
+            Restart=always
+            RestartSec=10
+            
+            [Install]
+            WantedBy=multi-user.target
+          SERVICEEOF
+            
+            sudo systemctl daemon-reload
+            sudo systemctl restart authBE
+            sudo systemctl enable authBE
           EOF
-
