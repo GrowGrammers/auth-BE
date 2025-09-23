@@ -31,7 +31,10 @@ jobs:
             Type=simple
             User=ec2-user
             WorkingDirectory=/home/ec2-user/app
-            ExecStart=/usr/bin/java -jar /home/ec2-user/app/build/libs/*.jar
+            ExecStart=/usr/bin/java -jar /home/ec2-user/app/build/libs/demo-0.0.1-SNAPSHOT.jar
+            Environment="DB_NAME=${{ secrets.DB_NAME }}"
+            Environment="DB_USER=${{ secrets.DB_USER }}"
+            Environment="DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
             Environment="DB_HOST=${{ secrets.DB_HOST }}"
             Environment="DB_PORT=${{ secrets.DB_PORT }}"
             Environment="GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}"
