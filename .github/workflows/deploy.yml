@@ -25,8 +25,24 @@ jobs:
             cd /home/${USER}/app   # EC2 안에 프로젝트 경로
             git pull origin main
             ./gradlew build -x test
+            
             # 기존 실행 중인 앱 종료 (Spring Boot 기준)
             pkill -f 'java -jar' || true
+
+            # 모든 환경변수 설정
+            export DB_HOST="${{ secrets.DB_HOST }}"
+            export DB_PORT="${{ secrets.DB_PORT }}"
+            export GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"
+            export GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}"
+            export GOOGLE_REDIRECT_URI="${{ secrets.GOOGLE_REDIRECT_URI }}"
+            export JWT_ACCESS_TOKEN_EXPIRATION="${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION }}"
+            export JWT_REFRESH_TOKEN_EXPIRATION="${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}"
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            export MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}"
+            export MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}"
+            export SWAGGER_PATH="${{ secrets.SWAGGER_PATH }}"
+            export USER="${{ secrets.USER }}"
+            
             nohup java -jar build/libs/*.jar > app.log 2>&1 &
           EOF
 
