@@ -7,7 +7,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
 class WebConfig(
-    @Value("\${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173, https://login-web-app-dusky.vercel.app/}")
+    @Value("\${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173, https://www.growgrammers.store}")
     private val allowedOrigins: String
 ) : WebMvcConfigurer {
     
@@ -18,6 +18,7 @@ class WebConfig(
             .allowedOrigins(*origins)  // 환경변수로 설정된 특정 origin들만 허용
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
             .allowedHeaders("*")
+            .exposedHeaders("Authorization")
             .allowCredentials(true)
             .maxAge(3600)
     }
