@@ -1,9 +1,6 @@
 package com.wq.auth.api.controller.auth
 
-import com.wq.auth.api.controller.auth.request.GoogleSocialLoginRequestDto
-import com.wq.auth.api.controller.auth.request.KakaoSocialLoginRequestDto
-import com.wq.auth.api.controller.auth.request.SocialLoginRequestDto
-import com.wq.auth.api.controller.auth.request.toDomain
+import com.wq.auth.api.controller.auth.request.*
 import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.domain.auth.SocialLoginService
 import com.wq.auth.security.annotation.PublicApi
@@ -68,8 +65,8 @@ class SocialLoginController(
             
             **지원 소셜 제공자:**
             - GOOGLE: Google OAuth2
-            - KAKAO: 카카오 OAuth2 (향후 지원 예정)
-            - NAVER: 네이버 OAuth2 (향후 지원 예정)
+            - KAKAO: 카카오 OAuth2
+            - NAVER: 네이버 OAuth2
         """
     )
     @ApiResponses(
@@ -272,7 +269,91 @@ class SocialLoginController(
         
         return Responses.success("카카오 로그인이 완료되었습니다")
     }
-    
+
+    /**
+     * Naver 소셜 로그인 (편의 메서드)
+     *
+     * Naver 전용 엔드포인트로, providerType을 별도로 지정하지 않아도 됩니다.
+     *
+     * @param authorizationCode Naver 인가 코드
+     * @param redirectUri 리다이렉트 URI (선택사항)
+     * @return JWT 토큰과 사용자 정보가 포함된 응답
+     */
+    @Operation(
+        summary = "Naver 소셜 로그인",
+        description = """
+            Naver 전용 편의 메서드로, providerType을 별도로 지정하지 않아도 됩니다.
+            
+            **사용 방법:**
+            1. 프론트엔드에서 Naver OAuth2 인증 URL로 사용자를 리다이렉트
+            2. 사용자가 Naver 인증 완료 후 받은 인가 코드(code)를 이 API로 전송
+            3. 백엔드에서 Naver API를 통해 사용자 정보 조회 후 JWT 토큰 발급
+            
+            **redirectUri 파라미터:**
+            - 선택사항: 미제공시 properties에 설정된 기본값 사용
+            - Naver OAuth2 설정의 승인된 리다이렉트 URI와 일치해야 함
+            - 프론트엔드 환경별로 다른 URI 사용 가능
+            
+            **토큰 반환 방식:**
+            - Access Token: Authorization 헤더에 Bearer 방식으로 반환
+            - Refresh Token: HttpOnly 쿠키로 설정 (XSS 공격 방지)
+            
+            **쿠키 설정:**
+            - HttpOnly: JavaScript 접근 불가 (XSS 방지)
+            - Path=/: 모든 경로에서 사용 가능
+            - Max-Age=1209600: 14일 만료
+        """
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Naver 로그인 성공 - Authorization 헤더에 Bearer 토큰, HttpOnly 쿠키에 리프레시 토큰 설정",
+                content = [Content(schema = Schema(implementation = SuccessResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "인가 코드(code) 파라미터가 누락되거나 잘못된 형식",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "Naver 인가 코드가 유효하지 않거나 만료됨",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Naver API 호출 실패 또는 서버 내부 오류",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            )
+        ]
+    )
+    @PublicApi("Naver 소셜 로그인")
+    @PostMapping("/api/v1/auth/naver/login")
+    fun naverLogin(
+        @Valid @RequestBody request: NaverSocialLoginRequestDto,
+        response: HttpServletResponse
+    ): SuccessResponse<Void> {
+        val serviceRequest = SocialLoginRequestDto(
+            authCode = request.authCode,
+            state = request.state,  // 네이버는 state 사용
+            grantType = request.grantType,
+            providerType = ProviderType.NAVER,  // NAVER로 수정됨
+            redirectUri = request.redirectUri
+        )
+
+        val loginResult = socialLoginService.processSocialLogin(serviceRequest.toDomain())
+
+        // RefreshToken을 HttpOnly 쿠키에 설정
+        setRefreshTokenCookie(response, loginResult.refreshToken)
+
+        // Authorization 헤더에 AccessToken 설정
+        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer ${loginResult.accessToken}")
+
+        return Responses.success("Naver 로그인이 완료되었습니다")
+    }
+
+
     /**
      * RefreshToken을 HttpOnly 쿠키로 설정합니다.
      * 
