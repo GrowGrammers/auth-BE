@@ -17,6 +17,7 @@ class WebConfig(
         registry.addMapping("/api/**")
             .allowedOrigins(*origins)  // 환경변수로 설정된 특정 origin들만 허용
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+            .exposedHeaders("Authorization")
             .allowedHeaders("*")
             .exposedHeaders("Authorization")
             .allowCredentials(true)

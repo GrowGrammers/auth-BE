@@ -45,6 +45,7 @@ dependencies {
 	implementation("com.google.api-client:google-api-client:2.7.0")
 	implementation("com.google.oauth-client:google-oauth-client-jetty:1.36.0")
 	implementation("com.google.apis:google-api-services-oauth2:v2-rev20200213-2.0.0")
+	implementation("org.springframework.boot:spring-boot-starter-webflux") // For WebClient (Kakao API calls)
 
 	// test
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

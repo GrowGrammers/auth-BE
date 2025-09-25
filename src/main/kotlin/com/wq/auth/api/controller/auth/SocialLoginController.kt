@@ -1,6 +1,7 @@
 package com.wq.auth.api.controller.auth
 
 import com.wq.auth.api.controller.auth.request.GoogleSocialLoginRequestDto
+import com.wq.auth.api.controller.auth.request.KakaoSocialLoginRequestDto
 import com.wq.auth.api.controller.auth.request.SocialLoginRequestDto
 import com.wq.auth.api.controller.auth.request.toDomain
 import com.wq.auth.api.domain.auth.entity.ProviderType
@@ -191,6 +192,85 @@ class SocialLoginController(
         response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer ${loginResult.accessToken}")
         
         return Responses.success("Google 로그인이 완료되었습니다")
+    }
+
+    /**
+     * 카카오 소셜 로그인 (편의 메서드)
+     * 
+     * 카카오 전용 엔드포인트로, providerType을 별도로 지정하지 않아도 됩니다.
+     * 
+     * @param request 카카오 소셜 로그인 요청
+     * @param response HTTP 응답 객체
+     * @return JWT 토큰과 사용자 정보가 포함된 응답
+     */
+    @Operation(
+        summary = "카카오 소셜 로그인",
+        description = """
+            카카오 전용 편의 메서드로, providerType을 별도로 지정하지 않아도 됩니다.
+            
+            **사용 방법:**
+            1. 프론트엔드에서 카카오 OAuth2 인증 URL로 사용자를 리다이렉트
+            2. 사용자가 카카오에서 인증 완료 후 받은 인가 코드(code)를 이 API로 전송
+            3. 백엔드에서 카카오 API를 통해 사용자 정보 조회 후 JWT 토큰 발급
+            
+            **리다이렉트 URI:**
+            - 환경변수(properties)에 설정된 기본값 사용
+            - 카카오 OAuth2 설정의 승인된 리다이렉트 URI와 일치해야 함
+            
+            **PKCE (Proof Key for Code Exchange):**
+            - 카카오는 PKCE를 지원하지만 선택사항
+            - 보안 강화를 위해 사용 권장
+            
+            **토큰 반환 방식:**
+            - Access Token: Authorization 헤더에 Bearer 방식으로 반환
+            - Refresh Token: HttpOnly 쿠키로 설정 (XSS 공격 방지)
+        """
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "카카오 로그인 성공 - Authorization 헤더에 Bearer 토큰, HttpOnly 쿠키에 리프레시 토큰 설정",
+                content = [Content(schema = Schema(implementation = SuccessResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "인가 코드(code) 파라미터가 누락되거나 잘못된 형식",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "카카오 인가 코드가 유효하지 않거나 만료됨",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "카카오 API 호출 실패 또는 서버 내부 오류",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            )
+        ]
+    )
+    @PublicApi("카카오 소셜 로그인")
+    @PostMapping("/api/v1/auth/kakao/login")
+    fun kakaoLogin(
+        @Valid @RequestBody request: KakaoSocialLoginRequestDto,
+        response: HttpServletResponse
+    ): SuccessResponse<Void> {
+        val serviceRequest = SocialLoginRequestDto(
+            authCode = request.authCode,
+            codeVerifier = request.codeVerifier,
+            providerType = ProviderType.KAKAO,
+        )
+        
+        val loginResult = socialLoginService.processSocialLogin(serviceRequest.toDomain())
+        
+        // RefreshToken을 HttpOnly 쿠키에 설정
+        setRefreshTokenCookie(response, loginResult.refreshToken)
+        
+        // Authorization 헤더에 AccessToken 설정
+        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer ${loginResult.accessToken}")
+        
+        return Responses.success("카카오 로그인이 완료되었습니다")
     }
     
     /**

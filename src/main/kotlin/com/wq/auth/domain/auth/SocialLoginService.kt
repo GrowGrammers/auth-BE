@@ -9,7 +9,8 @@ import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.api.domain.auth.entity.RefreshTokenEntity
 import com.wq.auth.domain.auth.request.SocialLoginRequest
 import com.wq.auth.domain.auth.response.SocialLoginResult
-import com.wq.auth.domain.oauth.OAuthClient
+import com.wq.auth.api.external.oauth.GoogleOAuthClient
+import com.wq.auth.api.external.oauth.KakaoOAuthClient
 import com.wq.auth.domain.oauth.OAuthUser
 import com.wq.auth.domain.oauth.error.SocialLoginException
 import com.wq.auth.domain.oauth.error.SocialLoginExceptionCode
@@ -31,7 +32,8 @@ import java.time.LocalDateTime
 @Service
 @Transactional(readOnly = true)
 class SocialLoginService(
-    private val oauthClient: OAuthClient,
+    private val googleOAuthClient: GoogleOAuthClient,
+    private val kakaoOAuthClient: KakaoOAuthClient,
     private val memberRepository: MemberRepository,
     private val authProviderRepository: AuthProviderRepository,
     private val jwtProvider: JwtProvider,
@@ -51,11 +53,54 @@ class SocialLoginService(
 
         return when (request.providerType) {
             ProviderType.GOOGLE -> processGoogleLogin(request)
-            ProviderType.KAKAO -> throw SocialLoginException(SocialLoginExceptionCode.UNSUPPORTED_PROVIDER)
+            ProviderType.KAKAO -> processKakaoLogin(request)
             ProviderType.NAVER -> throw SocialLoginException(SocialLoginExceptionCode.UNSUPPORTED_PROVIDER)
             ProviderType.EMAIL -> throw SocialLoginException(SocialLoginExceptionCode.UNSUPPORTED_PROVIDER)
             ProviderType.PHONE -> throw SocialLoginException(SocialLoginExceptionCode.UNSUPPORTED_PROVIDER)
         }
+    }
+
+    /**
+     * 카카오 소셜 로그인을 처리합니다.
+     */
+    private fun processKakaoLogin(request: SocialLoginRequest): SocialLoginResult {
+        log.info { "카카오 소셜 로그인 처리 시작" }
+
+        // 1. 카카오 OAuth 클라이언트를 통해 사용자 정보 조회
+        val oauthUser = kakaoOAuthClient.getUserFromAuthCode(
+            request.authCode,
+            request.codeVerifier,
+            request.redirectUri
+        )
+
+        log.info { "OAuth 사용자 정보 조회 완료: ${oauthUser.email}" }
+
+        // 2. 기존 회원 확인 또는 신규 회원 생성
+        val (member, isNewMember) = findOrCreateMember(oauthUser, oauthUser.providerType)
+
+        // 3. AuthProvider 엔티티 생성/업데이트
+        createOrUpdateAuthProvider(member, oauthUser, oauthUser.providerType)
+
+        // 4. 로그인 시간 업데이트
+        member.lastLoginAt = LocalDateTime.now()
+        memberRepository.save(member)
+
+        // 5. JWT 토큰 발급
+        val accessToken = jwtProvider.createAccessToken(member.opaqueId, member.role)
+        val refreshToken = jwtProvider.createRefreshToken(member.opaqueId)
+
+        // 6. RefreshToken 저장
+        val jti = jwtProvider.getJti(refreshToken)
+        val opaqueId = jwtProvider.getOpaqueId(refreshToken)
+        val refreshTokenEntity = RefreshTokenEntity.of(member, jti, opaqueId)
+        refreshTokenRepository.save(refreshTokenEntity)
+
+        log.info { "카카오 소셜 로그인 완료: ${member.opaqueId}, 신규 회원: $isNewMember" }
+
+        return SocialLoginResult(
+            accessToken = accessToken,
+            refreshToken = refreshToken
+        )
     }
 
     /**
@@ -64,8 +109,8 @@ class SocialLoginService(
     private fun processGoogleLogin(request: SocialLoginRequest): SocialLoginResult {
         log.info { "Google 소셜 로그인 처리 시작" }
 
-        // 1. OAuth 클라이언트를 통해 사용자 정보 조회
-        val oauthUser = oauthClient.getUserFromAuthCode(
+        // 1. 구글 OAuth 클라이언트를 통해 사용자 정보 조회
+        val oauthUser = googleOAuthClient.getUserFromAuthCode(
             request.authCode,
             request.codeVerifier,
             request.redirectUri
