@@ -36,13 +36,12 @@ class KakaoOAuthClient(
      * 
      * @param authorizationCode 카카오로부터 받은 인가 코드
      * @param codeVerifier PKCE 검증용 코드 검증자 (카카오는 선택사항)
-     * @param redirectUri 리다이렉트 URI (선택사항)
      * @return 카카오 액세스 토큰
      * @throws SocialLoginException 토큰 획득 실패 시
      */
-    fun getAccessToken(authorizationCode: String, codeVerifier: String, redirectUri: String? = null): String {
+    fun getAccessToken(authorizationCode: String, codeVerifier: String): String {
         log.info { "카카오 액세스 토큰 요청 시작" }
-        log.info { "redirectUri: ${redirectUri ?: kakaoOAuthProperties.redirectUri}" }
+        log.info { "redirectUri: ${kakaoOAuthProperties.redirectUri}" }
         
         val headers = HttpHeaders().apply {
             contentType = MediaType.APPLICATION_FORM_URLENCODED
@@ -54,7 +53,7 @@ class KakaoOAuthClient(
             if (!kakaoOAuthProperties.clientSecret.isNullOrBlank()) {
                 add("client_secret", kakaoOAuthProperties.clientSecret)
             }
-            add("redirect_uri", redirectUri ?: kakaoOAuthProperties.redirectUri)
+            add("redirect_uri", kakaoOAuthProperties.redirectUri)
             add("code", authorizationCode)
             // 카카오는 PKCE를 지원하지만 선택사항이므로 codeVerifier가 있을 때만 추가
             if (codeVerifier.isNotBlank()) {
@@ -154,11 +153,10 @@ class KakaoOAuthClient(
      * 
      * @param authCode 카카오로부터 받은 인가 코드
      * @param codeVerifier PKCE 검증용 코드 검증자 (카카오는 선택사항)
-     * @param redirectUri 리다이렉트 URI (선택사항)
      * @return 도메인 사용자 정보
      */
     override fun getUserFromAuthCode(req : OAuthAuthCodeRequest): OAuthUser {
-        val accessToken = getAccessToken(req.authCode, req.codeVerifier, req.redirectUri)
+        val accessToken = getAccessToken(req.authCode, req.codeVerifier)
         val kakaoUserInfo = getUserInfo(accessToken)
         
         return OAuthUser(
@@ -176,11 +174,10 @@ class KakaoOAuthClient(
      * 
      * @param authorizationCode 카카오로부터 받은 인가 코드
      * @param codeVerifier PKCE 검증용 코드 검증자 (카카오는 선택사항)
-     * @param redirectUri 리다이렉트 URI (선택사항)
      * @return 카카오 사용자 정보
      */
-    fun getUserInfoFromAuthCode(authorizationCode: String, codeVerifier: String, redirectUri: String? = null): KakaoUserInfoResponse {
-        val accessToken = getAccessToken(authorizationCode, codeVerifier, redirectUri)
+    fun getUserInfoFromAuthCode(authorizationCode: String, codeVerifier: String): KakaoUserInfoResponse {
+        val accessToken = getAccessToken(authorizationCode, codeVerifier)
         return getUserInfo(accessToken)
     }
 }

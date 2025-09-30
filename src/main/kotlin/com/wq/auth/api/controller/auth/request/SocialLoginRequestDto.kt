@@ -48,20 +48,12 @@ data class SocialLoginRequestDto(
     )
     val state: String? = null,
 
-    @field:Schema(description = "OAuth2 그랜트 타입", example = "authorization_code", allowableValues = ["authorization_code"])
-    val grantType: String = "authorization_code",
-
     @field:NotNull(message = "제공자 타입은 필수입니다")
     @field:Schema(description = "소셜 로그인 제공자 타입", example = "GOOGLE", allowableValues = ["GOOGLE", "KAKAO", "NAVER"])
     val providerType: ProviderType,
 
-    @field:Schema(
-        description = "리다이렉트 URI (선택사항, 미제공시 properties에 설정된 기본값 사용)",
-        example = "http://localhost:3000/auth/callback"
-    )
-    val redirectUri: String? = null
 )
 
 fun SocialLoginRequestDto.toDomain(): SocialLoginRequest =
-    SocialLoginRequest(authCode = authCode, codeVerifier = codeVerifier, state = state, grantType = grantType,providerType = providerType, redirectUri = redirectUri)
+    SocialLoginRequest(authCode = authCode, codeVerifier = codeVerifier, state = state, providerType = providerType)
 

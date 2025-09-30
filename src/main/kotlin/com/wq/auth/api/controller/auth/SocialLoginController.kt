@@ -339,7 +339,6 @@ class SocialLoginController(
             codeVerifier = request.codeVerifier,
             state = request.state,  // 네이버는 state 사용
             providerType = ProviderType.NAVER,  // NAVER로 수정됨
-            redirectUri = request.redirectUri
         )
 
         val loginResult = socialLoginService.processSocialLogin(serviceRequest.toDomain())

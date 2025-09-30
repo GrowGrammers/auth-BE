@@ -12,6 +12,7 @@ import com.wq.auth.domain.auth.response.SocialLoginResult
 import com.wq.auth.api.external.oauth.GoogleOAuthClient
 import com.wq.auth.api.external.oauth.KakaoOAuthClient
 import com.wq.auth.api.external.oauth.NaverOAuthClient
+import com.wq.auth.api.external.oauth.NaverOAuthProperties
 import com.wq.auth.domain.auth.request.OAuthAuthCodeRequest
 import com.wq.auth.domain.oauth.OAuthUser
 import com.wq.auth.domain.oauth.error.SocialLoginException
@@ -40,7 +41,8 @@ class SocialLoginService(
     private val memberRepository: MemberRepository,
     private val authProviderRepository: AuthProviderRepository,
     private val jwtProvider: JwtProvider,
-    private val refreshTokenRepository: RefreshTokenRepository
+    private val refreshTokenRepository: RefreshTokenRepository,
+    private val naverOAuthProperties: NaverOAuthProperties
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -74,7 +76,6 @@ class SocialLoginService(
             OAuthAuthCodeRequest(
                 request.authCode,
                 request.codeVerifier,
-                request.redirectUri
             )
         )
 
@@ -118,8 +119,7 @@ class SocialLoginService(
         val oauthUser = googleOAuthClient.getUserFromAuthCode(
             OAuthAuthCodeRequest(
                 authCode = request.authCode,
-                codeVerifier = request.codeVerifier,
-                redirectUri = request.redirectUri
+                codeVerifier = request.codeVerifier
             )
         )
 
@@ -164,8 +164,7 @@ class SocialLoginService(
             OAuthAuthCodeRequest(
                 authCode = request.authCode,
                 state = request.state!!,      // 네이버는 state 사용
-                codeVerifier = request.codeVerifier,
-                redirectUri = request.redirectUri
+                codeVerifier = request.codeVerifier
             )
         )
 

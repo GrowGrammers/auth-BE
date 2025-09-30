@@ -17,13 +17,7 @@ data class NaverSocialLoginRequestDto(
     @field:NotBlank(message = "codeVerifier는 필수입니다")
     @field:Schema(description = "PKCE 검증용 코드 검증자", example = "NgAfIySigI...IVxKxbmrpg")
     val codeVerifier: String,
-
-    @field:Schema(
-        description = "리다이렉트 URI (선택사항, 미제공시 properties에 설정된 기본값 사용)", 
-        example = "http://localhost:3000/auth/callback"
-    )
-    val redirectUri: String? = null
 )
 
 fun NaverSocialLoginRequestDto.toDomain(): NaverSocialLoginRequest =
-    NaverSocialLoginRequest(authCode, state, codeVerifier, redirectUri)
+    NaverSocialLoginRequest(authCode, state, codeVerifier)
