@@ -1,6 +1,6 @@
 package com.wq.auth.api.controller.auth.request
 
-import com.wq.auth.domain.auth.request.NaverSocialLoginRequest
+import com.wq.auth.api.domain.auth.request.NaverSocialLoginRequest
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank
 

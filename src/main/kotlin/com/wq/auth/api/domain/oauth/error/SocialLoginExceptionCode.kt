@@ -1,4 +1,4 @@
-package com.wq.auth.domain.oauth.error
+package com.wq.auth.api.domain.oauth.error
 
 import com.wq.auth.shared.error.ApiResponseCode
 

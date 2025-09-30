@@ -3,11 +3,11 @@ package com.wq.auth.api.external.oauth
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.api.external.oauth.dto.NaverUserInfoResponse
-import com.wq.auth.domain.auth.request.OAuthAuthCodeRequest
-import com.wq.auth.domain.oauth.OAuthClient
-import com.wq.auth.domain.oauth.OAuthUser
-import com.wq.auth.domain.oauth.error.SocialLoginException
-import com.wq.auth.domain.oauth.error.SocialLoginExceptionCode
+import com.wq.auth.api.domain.auth.request.OAuthAuthCodeRequest
+import com.wq.auth.api.domain.oauth.OAuthClient
+import com.wq.auth.api.domain.oauth.OAuthUser
+import com.wq.auth.api.domain.oauth.error.SocialLoginException
+import com.wq.auth.api.domain.oauth.error.SocialLoginExceptionCode
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.*
 import org.springframework.stereotype.Component
@@ -45,15 +45,13 @@ class NaverOAuthClient(
         authorizationCode: String,
         state: String,
         codeVerifier: String,
-        redirectUri: String? = null
     ): String {
         log.info { "Naver 액세스 토큰 요청 시작" }
-        log.info { "redirectUri: ${redirectUri ?: naverOAuthProperties.redirectUri}" }
+        log.info { "redirectUri: ${ naverOAuthProperties.redirectUri}" }
 
         val headers = HttpHeaders().apply {
             contentType = MediaType.APPLICATION_FORM_URLENCODED
         }
-
 
         val body: MultiValueMap<String, String> = LinkedMultiValueMap<String, String>().apply {
             add("client_id", naverOAuthProperties.clientId)
@@ -182,7 +180,6 @@ class NaverOAuthClient(
      * @param authorizationCode Naver로부터 받은 인가 코드
      * @param state CSRF 방지용 상태 값
      * @param codeVerifier PKCE 검증용 코드 검증자
-     * @param redirectUri 리다이렉트 URI
      * @return Naver 사용자 정보
      */
     fun getUserInfoFromAuthCode(

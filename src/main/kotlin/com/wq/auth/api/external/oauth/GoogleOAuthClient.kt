@@ -3,11 +3,11 @@ package com.wq.auth.api.external.oauth
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.api.external.oauth.dto.GoogleUserInfoResponse
-import com.wq.auth.domain.auth.request.OAuthAuthCodeRequest
-import com.wq.auth.domain.oauth.OAuthClient
-import com.wq.auth.domain.oauth.OAuthUser
-import com.wq.auth.domain.oauth.error.SocialLoginException
-import com.wq.auth.domain.oauth.error.SocialLoginExceptionCode
+import com.wq.auth.api.domain.auth.request.OAuthAuthCodeRequest
+import com.wq.auth.api.domain.oauth.OAuthClient
+import com.wq.auth.api.domain.oauth.OAuthUser
+import com.wq.auth.api.domain.oauth.error.SocialLoginException
+import com.wq.auth.api.domain.oauth.error.SocialLoginExceptionCode
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.*
 import org.springframework.stereotype.Component
