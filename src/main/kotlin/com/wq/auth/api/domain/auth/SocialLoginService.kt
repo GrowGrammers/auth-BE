@@ -10,7 +10,6 @@ import com.wq.auth.api.domain.auth.response.SocialLoginResult
 import com.wq.auth.api.external.oauth.GoogleOAuthClient
 import com.wq.auth.api.external.oauth.KakaoOAuthClient
 import com.wq.auth.api.external.oauth.NaverOAuthClient
-import com.wq.auth.api.external.oauth.NaverOAuthProperties
 import com.wq.auth.api.domain.auth.request.OAuthAuthCodeRequest
 import com.wq.auth.api.domain.oauth.OAuthUser
 import com.wq.auth.api.domain.oauth.error.SocialLoginException
@@ -40,7 +39,6 @@ class SocialLoginService(
     private val authProviderRepository: AuthProviderRepository,
     private val jwtProvider: JwtProvider,
     private val refreshTokenRepository: RefreshTokenRepository,
-    private val naverOAuthProperties: NaverOAuthProperties
 ) {
     private val log = KotlinLogging.logger {}
 

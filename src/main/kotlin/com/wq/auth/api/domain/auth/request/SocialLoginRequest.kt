@@ -10,7 +10,7 @@ import com.wq.auth.api.domain.auth.entity.ProviderType
  * - Naver: 전통적인 OAuth2 방식 (state 사용) + PKCE
  *
  * @param authCode 소셜 제공자로부터 받은 인가 코드
- * @param codeVerifier PKCE 검증용 코드 검증자 (Google, Kakao용 - 선택사항)
+ * @param codeVerifier PKCE 검증용 코드 검증자
  * @param state CSRF 방지용 상태 값 (Naver용 - 선택사항)
  * @param providerType 소셜 로그인 제공자 타입
  */

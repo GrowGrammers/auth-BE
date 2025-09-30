@@ -36,7 +36,6 @@ class NaverOAuthClient(
      *
      * @param authorizationCode Naver로부터 받은 인가 코드
      * @param state CSRF 방지용 상태 값
-     * @param redirectUri 리다이렉트 URI
      * @param codeVerifier PKCE 검증용 코드 검증자
      * @return Naver 액세스 토큰
      * @throws SocialLoginException 토큰 획득 실패 시
@@ -155,7 +154,7 @@ class NaverOAuthClient(
      *
      * @param authCode Naver로부터 받은 인가 코드
      * @param state CSRF 방지용 상태 값
-     * @param redirectUri 리다이렉트 URI
+     * @param codeVerifier PKCE 검증용 코드 검증자
      * @return 도메인 사용자 정보
      */
     override fun getUserFromAuthCode(req: OAuthAuthCodeRequest): OAuthUser {
