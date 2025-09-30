@@ -1,4 +1,4 @@
-package com.wq.auth.domain.oauth
+package com.wq.auth.api.domain.oauth
 
 import com.wq.auth.api.domain.auth.entity.ProviderType
 

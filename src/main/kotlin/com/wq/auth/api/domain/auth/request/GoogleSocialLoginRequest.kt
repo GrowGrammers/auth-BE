@@ -1,4 +1,4 @@
-package com.wq.auth.domain.auth.request
+package com.wq.auth.api.domain.auth.request
 
 data class GoogleSocialLoginRequest(
     val authCode: String,
