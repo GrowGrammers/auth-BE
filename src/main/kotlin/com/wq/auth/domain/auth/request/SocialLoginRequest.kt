@@ -18,7 +18,7 @@ import com.wq.auth.api.domain.auth.entity.ProviderType
  */
 data class SocialLoginRequest(
     val authCode: String,
-    val codeVerifier: String? = null,
+    val codeVerifier: String,
     val state: String? = null,
     val grantType: String = "authorization_code",
     val providerType: ProviderType,

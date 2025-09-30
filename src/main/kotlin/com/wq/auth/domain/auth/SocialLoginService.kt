@@ -12,6 +12,7 @@ import com.wq.auth.domain.auth.response.SocialLoginResult
 import com.wq.auth.api.external.oauth.GoogleOAuthClient
 import com.wq.auth.api.external.oauth.KakaoOAuthClient
 import com.wq.auth.api.external.oauth.NaverOAuthClient
+import com.wq.auth.domain.auth.request.OAuthAuthCodeRequest
 import com.wq.auth.domain.oauth.OAuthUser
 import com.wq.auth.domain.oauth.error.SocialLoginException
 import com.wq.auth.domain.oauth.error.SocialLoginExceptionCode
@@ -70,9 +71,11 @@ class SocialLoginService(
 
         // 1. 카카오 OAuth 클라이언트를 통해 사용자 정보 조회
         val oauthUser = kakaoOAuthClient.getUserFromAuthCode(
-            request.authCode,
-            request.codeVerifier!!,
-            request.redirectUri
+            OAuthAuthCodeRequest(
+                request.authCode,
+                request.codeVerifier,
+                request.redirectUri
+            )
         )
 
         log.info { "OAuth 사용자 정보 조회 완료: ${oauthUser.email}" }
@@ -113,9 +116,11 @@ class SocialLoginService(
 
         // 1. 구글 OAuth 클라이언트를 통해 사용자 정보 조회
         val oauthUser = googleOAuthClient.getUserFromAuthCode(
-            request.authCode,
-            request.codeVerifier!!,
-            request.redirectUri
+            OAuthAuthCodeRequest(
+                authCode = request.authCode,
+                codeVerifier = request.codeVerifier,
+                redirectUri = request.redirectUri
+            )
         )
 
         log.info { "OAuth 사용자 정보 조회 완료: ${oauthUser.email}" }
@@ -156,9 +161,12 @@ class SocialLoginService(
 
         // 1. 네이버 OAuth 클라이언트를 통해 사용자 정보 조회
         val oauthUser = naverOAuthClient.getUserFromAuthCode(
-            request.authCode,
-            request.state!!,      // 네이버는 codeVerifier 대신 state 사용
-            request.redirectUri
+            OAuthAuthCodeRequest(
+                authCode = request.authCode,
+                state = request.state!!,      // 네이버는 state 사용
+                codeVerifier = request.codeVerifier,
+                redirectUri = request.redirectUri
+            )
         )
 
         log.info { "OAuth 사용자 정보 조회 완료: ${oauthUser.email}" }

@@ -3,6 +3,7 @@ package com.wq.auth.api.external.oauth
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.api.external.oauth.dto.GoogleUserInfoResponse
+import com.wq.auth.domain.auth.request.OAuthAuthCodeRequest
 import com.wq.auth.domain.oauth.OAuthClient
 import com.wq.auth.domain.oauth.OAuthUser
 import com.wq.auth.domain.oauth.error.SocialLoginException
@@ -151,8 +152,8 @@ class GoogleOAuthClient(
      * @param redirectUri 리다이렉트 URI (선택사항)
      * @return 도메인 사용자 정보
      */
-    override fun getUserFromAuthCode(authCode: String, codeVerifier: String, redirectUri: String?): OAuthUser {
-        val accessToken = getAccessToken(authCode, codeVerifier, redirectUri)
+    override fun getUserFromAuthCode(req : OAuthAuthCodeRequest): OAuthUser {
+        val accessToken = getAccessToken(req.authCode, req.codeVerifier, req.redirectUri)
         val googleUserInfo = getUserInfo(accessToken)
         
         return OAuthUser(

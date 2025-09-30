@@ -336,8 +336,8 @@ class SocialLoginController(
     ): SuccessResponse<Void> {
         val serviceRequest = SocialLoginRequestDto(
             authCode = request.authCode,
+            codeVerifier = request.codeVerifier,
             state = request.state,  // 네이버는 state 사용
-            grantType = request.grantType,
             providerType = ProviderType.NAVER,  // NAVER로 수정됨
             redirectUri = request.redirectUri
         )

@@ -31,7 +31,7 @@ data class SocialLoginRequestDto(
         description = "PKCE 검증용 코드 검증자 (Google, Kakao용 - 선택사항)",
         example = "NgAfIySigI...IVxKxbmrpg"
     )
-    val codeVerifier: String? = null,
+    val codeVerifier: String,
 
     @field:Schema(
         description = "CSRF 방지용 상태 값 (Naver용 - 선택사항)",
@@ -54,4 +54,4 @@ data class SocialLoginRequestDto(
 )
 
 fun SocialLoginRequestDto.toDomain(): SocialLoginRequest =
-    SocialLoginRequest(authCode, codeVerifier, state, grantType, providerType, redirectUri)
+    SocialLoginRequest(authCode = authCode, codeVerifier = codeVerifier, state = state, grantType = grantType,providerType = providerType, redirectUri = redirectUri)
