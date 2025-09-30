@@ -1,6 +1,6 @@
-package com.wq.auth.domain.oauth
+package com.wq.auth.api.domain.oauth
 
-import com.wq.auth.domain.auth.request.OAuthAuthCodeRequest
+import com.wq.auth.api.domain.auth.request.OAuthAuthCodeRequest
 
 /**
  * OAuth 클라이언트 포트 인터페이스
@@ -19,7 +19,6 @@ interface OAuthClient {
      * @param authCode 소셜 제공자로부터 받은 인가 코드
      * @param state CSRF 방지용 상태 값 (네이버)
      * @param codeVerifier PKCE 검증용 코드 검증자
-     * @param redirectUri 리다이렉트 URI (선택사항)
      * @return 도메인 사용자 정보
      */
     fun getUserFromAuthCode(

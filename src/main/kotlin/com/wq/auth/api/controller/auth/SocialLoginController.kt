@@ -2,7 +2,7 @@ package com.wq.auth.api.controller.auth
 
 import com.wq.auth.api.controller.auth.request.*
 import com.wq.auth.api.domain.auth.entity.ProviderType
-import com.wq.auth.domain.auth.SocialLoginService
+import com.wq.auth.api.domain.auth.SocialLoginService
 import com.wq.auth.security.annotation.PublicApi
 import com.wq.auth.web.common.response.FailResponse
 import com.wq.auth.web.common.response.Responses
@@ -339,7 +339,6 @@ class SocialLoginController(
             codeVerifier = request.codeVerifier,
             state = request.state,  // 네이버는 state 사용
             providerType = ProviderType.NAVER,  // NAVER로 수정됨
-            redirectUri = request.redirectUri
         )
 
         val loginResult = socialLoginService.processSocialLogin(serviceRequest.toDomain())

@@ -3,11 +3,11 @@ package com.wq.auth.api.external.oauth
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.api.external.oauth.dto.GoogleUserInfoResponse
-import com.wq.auth.domain.auth.request.OAuthAuthCodeRequest
-import com.wq.auth.domain.oauth.OAuthClient
-import com.wq.auth.domain.oauth.OAuthUser
-import com.wq.auth.domain.oauth.error.SocialLoginException
-import com.wq.auth.domain.oauth.error.SocialLoginExceptionCode
+import com.wq.auth.api.domain.auth.request.OAuthAuthCodeRequest
+import com.wq.auth.api.domain.oauth.OAuthClient
+import com.wq.auth.api.domain.oauth.OAuthUser
+import com.wq.auth.api.domain.oauth.error.SocialLoginException
+import com.wq.auth.api.domain.oauth.error.SocialLoginExceptionCode
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.*
 import org.springframework.stereotype.Component
@@ -36,11 +36,10 @@ class GoogleOAuthClient(
      * 
      * @param authorizationCode Google로부터 받은 인가 코드
      * @param codeVerifier PKCE 검증용 코드 검증자
-     * @param redirectUri 리다이렉트 URI (선택사항)
      * @return Google 액세스 토큰
      * @throws SocialLoginException 토큰 획득 실패 시
      */
-    fun getAccessToken(authorizationCode: String, codeVerifier: String, redirectUri: String? = null): String {
+    fun getAccessToken(authorizationCode: String, codeVerifier: String): String {
         log.info { "Google 액세스 토큰 요청 시작" }
         log.info { "redirectUri: ${googleOAuthProperties.redirectUri}" }
         
@@ -54,7 +53,7 @@ class GoogleOAuthClient(
             add("code", authorizationCode)
             add("grant_type", "authorization_code")
             add("code_verifier", codeVerifier)
-            add("redirect_uri", redirectUri ?: googleOAuthProperties.redirectUri)
+            add("redirect_uri", googleOAuthProperties.redirectUri)
         }
         
         val request = HttpEntity(body, headers)
@@ -149,11 +148,10 @@ class GoogleOAuthClient(
      * 
      * @param authCode Google로부터 받은 인가 코드
      * @param codeVerifier PKCE 검증용 코드 검증자
-     * @param redirectUri 리다이렉트 URI (선택사항)
      * @return 도메인 사용자 정보
      */
     override fun getUserFromAuthCode(req : OAuthAuthCodeRequest): OAuthUser {
-        val accessToken = getAccessToken(req.authCode, req.codeVerifier, req.redirectUri)
+        val accessToken = getAccessToken(req.authCode, req.codeVerifier)
         val googleUserInfo = getUserInfo(accessToken)
         
         return OAuthUser(
@@ -171,11 +169,10 @@ class GoogleOAuthClient(
      * 
      * @param authorizationCode Google로부터 받은 인가 코드
      * @param codeVerifier PKCE 검증용 코드 검증자
-     * @param redirectUri 리다이렉트 URI (선택사항)
      * @return Google 사용자 정보
      */
-    fun getUserInfoFromAuthCode(authorizationCode: String, codeVerifier: String, redirectUri: String? = null): GoogleUserInfoResponse {
-        val accessToken = getAccessToken(authorizationCode, codeVerifier, redirectUri)
+    fun getUserInfoFromAuthCode(authorizationCode: String, codeVerifier: String): GoogleUserInfoResponse {
+        val accessToken = getAccessToken(authorizationCode, codeVerifier)
         return getUserInfo(accessToken)
     }
 }

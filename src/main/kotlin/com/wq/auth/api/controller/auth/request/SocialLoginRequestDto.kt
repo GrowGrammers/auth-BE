@@ -1,7 +1,7 @@
 package com.wq.auth.api.controller.auth.request
 
 import com.wq.auth.api.domain.auth.entity.ProviderType
-import com.wq.auth.domain.auth.request.SocialLoginRequest
+import com.wq.auth.api.domain.auth.request.SocialLoginRequest
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -18,8 +18,7 @@ import jakarta.validation.constraints.NotNull
  * @param codeVerifier PKCE 검증을 위한 코드 검증자 (Google, Kakao용 - 선택사항)
  * @param state CSRF 방지용 상태 값 (Naver용 - 선택사항)
  * @param providerType 소셜 로그인 제공자 타입 (GOOGLE, KAKAO, NAVER 등)
- * @param redirectUri 리다이렉트 URI (선택사항, 미제공시 properties 기본값 사용)
- */
+ * */
 @Schema(description = "범용 소셜 로그인 요청")
 data class SocialLoginRequestDto(
 
@@ -31,37 +30,20 @@ data class SocialLoginRequestDto(
         description = "PKCE 검증용 코드 검증자 (Google, Kakao용 - 선택사항)",
         example = "NgAfIySigI...IVxKxbmrpg"
     )
-    val codeVerifier: String? = null,
+    val codeVerifier: String,
 
     @field:Schema(
         description = "CSRF 방지용 상태 값 (Naver용 - 선택사항)",
         example = "random_state_string_12345"
     )
     val state: String? = null,
-
-    @field:Schema(description = "OAuth2 그랜트 타입", example = "authorization_code", allowableValues = ["authorization_code"])
-    val grantType: String = "authorization_code",
-
-    @field:Schema(
-        description = "CSRF 방지용 상태 값 (Naver용 - 선택사항)",
-        example = "random_state_string_12345"
-    )
-    val state: String? = null,
-
-    @field:Schema(description = "OAuth2 그랜트 타입", example = "authorization_code", allowableValues = ["authorization_code"])
-    val grantType: String = "authorization_code",
 
     @field:NotNull(message = "제공자 타입은 필수입니다")
     @field:Schema(description = "소셜 로그인 제공자 타입", example = "GOOGLE", allowableValues = ["GOOGLE", "KAKAO", "NAVER"])
     val providerType: ProviderType,
 
-    @field:Schema(
-        description = "리다이렉트 URI (선택사항, 미제공시 properties에 설정된 기본값 사용)",
-        example = "http://localhost:3000/auth/callback"
-    )
-    val redirectUri: String? = null
 )
 
 fun SocialLoginRequestDto.toDomain(): SocialLoginRequest =
-    SocialLoginRequest(authCode = authCode, codeVerifier = codeVerifier, state = state, grantType = grantType,providerType = providerType, redirectUri = redirectUri)
+    SocialLoginRequest(authCode = authCode, codeVerifier = codeVerifier, state = state, providerType = providerType)
 

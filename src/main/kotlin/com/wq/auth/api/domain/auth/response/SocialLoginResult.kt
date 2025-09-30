@@ -1,4 +1,4 @@
-package com.wq.auth.domain.auth.response
+package com.wq.auth.api.domain.auth.response
 
 /**
  * 소셜 로그인 서비스 결과 DTO
