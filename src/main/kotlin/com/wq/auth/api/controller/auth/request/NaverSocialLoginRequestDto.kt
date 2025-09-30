@@ -14,9 +14,9 @@ data class NaverSocialLoginRequestDto(
     @field:Schema(description = "CSRF 방지용 상태 값", example = "random_state_string_12345")
     val state: String,
 
-    @field:NotBlank(message = "grantType은 필수입니다")
-    @field:Schema(description = "OAuth2 그랜트 타입", example = "authorization_code", allowableValues = ["authorization_code"])
-    val grantType: String = "authorization_code",
+    @field:NotBlank(message = "codeVerifier는 필수입니다")
+    @field:Schema(description = "PKCE 검증용 코드 검증자", example = "NgAfIySigI...IVxKxbmrpg")
+    val codeVerifier: String,
 
     @field:Schema(
         description = "리다이렉트 URI (선택사항, 미제공시 properties에 설정된 기본값 사용)", 
@@ -26,4 +26,4 @@ data class NaverSocialLoginRequestDto(
 )
 
 fun NaverSocialLoginRequestDto.toDomain(): NaverSocialLoginRequest =
-    NaverSocialLoginRequest(authCode, state, grantType, redirectUri)
+    NaverSocialLoginRequest(authCode, state, codeVerifier, redirectUri)

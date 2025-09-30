@@ -3,6 +3,7 @@ package com.wq.auth.api.external.oauth
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.api.external.oauth.dto.NaverUserInfoResponse
+import com.wq.auth.domain.auth.request.OAuthAuthCodeRequest
 import com.wq.auth.domain.oauth.OAuthClient
 import com.wq.auth.domain.oauth.OAuthUser
 import com.wq.auth.domain.oauth.error.SocialLoginException
@@ -35,11 +36,18 @@ class NaverOAuthClient(
      *
      * @param authorizationCode Naver로부터 받은 인가 코드
      * @param state CSRF 방지용 상태 값
-     * @param redirectUri 리다이렉트 URI (선택사항)
+     * @param redirectUri 리다이렉트 URI
+<
+     * @param codeVerifier PKCE 검증용 코드 검증자
      * @return Naver 액세스 토큰
      * @throws SocialLoginException 토큰 획득 실패 시
      */
-    fun getAccessToken(authorizationCode: String, state: String, redirectUri: String? = null): String {
+    fun getAccessToken(
+        authorizationCode: String,
+        state: String,
+        codeVerifier: String,
+        redirectUri: String? = null
+    ): String {
         log.info { "Naver 액세스 토큰 요청 시작" }
         log.info { "redirectUri: ${redirectUri ?: naverOAuthProperties.redirectUri}" }
 
@@ -50,10 +58,11 @@ class NaverOAuthClient(
         val body: MultiValueMap<String, String> = LinkedMultiValueMap<String, String>().apply {
             add("client_id", naverOAuthProperties.clientId)
             add("client_secret", naverOAuthProperties.clientSecret)
+            add("code_verifier", codeVerifier)
             add("code", authorizationCode)
             add("grant_type", "authorization_code")
             add("state", state)
-            redirectUri?.let { add("redirect_uri", it) }
+            add("redirect_uri", redirectUri ?: naverOAuthProperties.redirectUri)
         }
 
         val request = HttpEntity(body, headers)
@@ -148,11 +157,13 @@ class NaverOAuthClient(
      *
      * @param authCode Naver로부터 받은 인가 코드
      * @param state CSRF 방지용 상태 값
-     * @param redirectUri 리다이렉트 URI (선택사항)
+     * @param redirectUri 리다이렉트 URI
      * @return 도메인 사용자 정보
      */
-    override fun getUserFromAuthCode(authCode: String, state: String, redirectUri: String?): OAuthUser {
-        val accessToken = getAccessToken(authCode, state, redirectUri)
+    override fun getUserFromAuthCode(req: OAuthAuthCodeRequest): OAuthUser {
+        log.info { "Naver AuthCode 요청 시작" }
+        log.info { "redirectUri: ${req.redirectUri ?: naverOAuthProperties.redirectUri}" }
+        val accessToken = getAccessToken(req.authCode, req.state!!, req.codeVerifier, req.redirectUri)
         val naverUserInfo = getUserInfo(accessToken)
 
         return OAuthUser(
@@ -170,11 +181,17 @@ class NaverOAuthClient(
      *
      * @param authorizationCode Naver로부터 받은 인가 코드
      * @param state CSRF 방지용 상태 값
-     * @param redirectUri 리다이렉트 URI (선택사항)
+     * @param codeVerifier PKCE 검증용 코드 검증자
+     * @param redirectUri 리다이렉트 URI
      * @return Naver 사용자 정보
      */
-    fun getUserInfoFromAuthCode(authorizationCode: String, state: String, redirectUri: String? = null): NaverUserInfoResponse {
-        val accessToken = getAccessToken(authorizationCode, state, redirectUri)
+    fun getUserInfoFromAuthCode(
+        authorizationCode: String,
+        state: String,
+        codeVerifier: String,
+        redirectUri: String? = null
+    ): NaverUserInfoResponse {
+        val accessToken = getAccessToken(authorizationCode, state, codeVerifier, redirectUri)
         return getUserInfo(accessToken)
     }
 }

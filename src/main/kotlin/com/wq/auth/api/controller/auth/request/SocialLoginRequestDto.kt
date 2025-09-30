@@ -42,6 +42,15 @@ data class SocialLoginRequestDto(
     @field:Schema(description = "OAuth2 그랜트 타입", example = "authorization_code", allowableValues = ["authorization_code"])
     val grantType: String = "authorization_code",
 
+    @field:Schema(
+        description = "CSRF 방지용 상태 값 (Naver용 - 선택사항)",
+        example = "random_state_string_12345"
+    )
+    val state: String? = null,
+
+    @field:Schema(description = "OAuth2 그랜트 타입", example = "authorization_code", allowableValues = ["authorization_code"])
+    val grantType: String = "authorization_code",
+
     @field:NotNull(message = "제공자 타입은 필수입니다")
     @field:Schema(description = "소셜 로그인 제공자 타입", example = "GOOGLE", allowableValues = ["GOOGLE", "KAKAO", "NAVER"])
     val providerType: ProviderType,
@@ -54,4 +63,5 @@ data class SocialLoginRequestDto(
 )
 
 fun SocialLoginRequestDto.toDomain(): SocialLoginRequest =
-    SocialLoginRequest(authCode, codeVerifier, state, grantType, providerType, redirectUri)
+    SocialLoginRequest(authCode = authCode, codeVerifier = codeVerifier, state = state, grantType = grantType,providerType = providerType, redirectUri = redirectUri)
+
