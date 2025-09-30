@@ -36,7 +36,8 @@ class NaverOAuthClient(
      *
      * @param authorizationCode Naver로부터 받은 인가 코드
      * @param state CSRF 방지용 상태 값
-     * @param redirectUri 리다이렉트 URI (선택사항)
+     * @param redirectUri 리다이렉트 URI
+<
      * @param codeVerifier PKCE 검증용 코드 검증자
      * @return Naver 액세스 토큰
      * @throws SocialLoginException 토큰 획득 실패 시
@@ -53,7 +54,6 @@ class NaverOAuthClient(
         val headers = HttpHeaders().apply {
             contentType = MediaType.APPLICATION_FORM_URLENCODED
         }
-
 
         val body: MultiValueMap<String, String> = LinkedMultiValueMap<String, String>().apply {
             add("client_id", naverOAuthProperties.clientId)
@@ -157,7 +157,7 @@ class NaverOAuthClient(
      *
      * @param authCode Naver로부터 받은 인가 코드
      * @param state CSRF 방지용 상태 값
-     * @param redirectUri 리다이렉트 URI (선택사항)
+     * @param redirectUri 리다이렉트 URI
      * @return 도메인 사용자 정보
      */
     override fun getUserFromAuthCode(req: OAuthAuthCodeRequest): OAuthUser {
@@ -182,7 +182,7 @@ class NaverOAuthClient(
      * @param authorizationCode Naver로부터 받은 인가 코드
      * @param state CSRF 방지용 상태 값
      * @param codeVerifier PKCE 검증용 코드 검증자
-     * @param redirectUri 리다이렉트 URI (선택사항)
+     * @param redirectUri 리다이렉트 URI
      * @return Naver 사용자 정보
      */
     fun getUserInfoFromAuthCode(

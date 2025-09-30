@@ -353,7 +353,6 @@ class SocialLoginController(
         return Responses.success("Naver 로그인이 완료되었습니다")
     }
 
-
     /**
      * RefreshToken을 HttpOnly 쿠키로 설정합니다.
      * 
