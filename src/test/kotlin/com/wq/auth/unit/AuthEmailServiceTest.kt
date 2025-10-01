@@ -59,7 +59,7 @@ class AuthEmailServiceTest : StringSpec({
         val entity = EmailVerificationEntity(email, code)
 
         // repository 동작 모킹
-        whenever(emailRepository.findByEmail(email)).thenReturn(entity)
+        whenever(emailRepository.findFirstByEmailOrderByCreatedAtDesc(email)).thenReturn(entity)
 
         authEmailService.verifyCode(email, code)
     }
@@ -70,7 +70,7 @@ class AuthEmailServiceTest : StringSpec({
         val entity = EmailVerificationEntity(email, code)
 
         // repository 동작 모킹
-        whenever(emailRepository.findByEmail(email)).thenReturn(entity)
+        whenever(emailRepository.findFirstByEmailOrderByCreatedAtDesc(email)).thenReturn(entity)
 
         val exception = shouldThrow<EmailException> {
             authEmailService.verifyCode(email, "wrong-code")

@@ -30,3 +30,8 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.type.descriptor.sql.BasicBinder: trace
     org.springframework.orm.jpa: debug
+
+app:
+  cookie:
+    secure: false
+    same-site: Lax

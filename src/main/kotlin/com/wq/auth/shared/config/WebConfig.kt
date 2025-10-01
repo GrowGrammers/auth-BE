@@ -19,6 +19,7 @@ class WebConfig(
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
             .exposedHeaders("Authorization")
             .allowedHeaders("*")
+            .exposedHeaders("Authorization")
             .allowCredentials(true)
             .maxAge(3600)
     }

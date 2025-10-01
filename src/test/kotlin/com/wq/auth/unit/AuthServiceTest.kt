@@ -76,7 +76,7 @@ class AuthServiceTest : DescribeSpec({
             whenever(mockAuthProvider.email).thenReturn(email)
             whenever(mockAuthProvider.member).thenReturn(mockMember)
 
-            whenever(authProviderRepository.findByEmail(email)).thenReturn(mockAuthProvider)
+            whenever(authProviderRepository.findByEmailAndProviderType(email,ProviderType.EMAIL)).thenReturn(mockAuthProvider)
             whenever(jwtProvider.createAccessToken(any(), any(), any())).thenReturn(accessToken)
             whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(refreshToken)
             whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
@@ -91,7 +91,7 @@ class AuthServiceTest : DescribeSpec({
             result.accessToken shouldBe accessToken
             result.refreshToken shouldBe refreshToken
 
-            verify(authProviderRepository).findByEmail(email)
+            verify(authProviderRepository).findByEmailAndProviderType(email, ProviderType.EMAIL)
             verify(jwtProvider).createAccessToken(any(), any(), any())
             verify(jwtProvider).createRefreshToken(any(), any())
             verify(refreshTokenRepository, times(1)).save(any<RefreshTokenEntity>())
@@ -312,7 +312,7 @@ class AuthServiceTest : DescribeSpec({
         whenever(mockAuthProvider.email).thenReturn(email)
         whenever(mockAuthProvider.member).thenReturn(mockMember)
 
-        whenever(authProviderRepository.findByEmail(email)).thenReturn(mockAuthProvider)
+        whenever(authProviderRepository.findByEmailAndProviderType(email,ProviderType.EMAIL)).thenReturn(mockAuthProvider)
         whenever(jwtProvider.createAccessToken(any(), any(), any())).thenReturn(accessToken)
         whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn(refreshToken)
         whenever(jwtProvider.getJti(refreshToken)).thenReturn(jti)
@@ -328,7 +328,7 @@ class AuthServiceTest : DescribeSpec({
         result.refreshToken shouldBe refreshToken
         
 
-        verify(authProviderRepository).findByEmail(email)
+        verify(authProviderRepository).findByEmailAndProviderType(email, ProviderType.EMAIL)
         verify(jwtProvider).createAccessToken(any(), any(), any())
         verify(jwtProvider).createRefreshToken(any(), any())
         verify(refreshTokenRepository).save(any<RefreshTokenEntity>())
@@ -350,7 +350,7 @@ class AuthServiceTest : DescribeSpec({
         whenever(mockAuthProvider.member).thenReturn(mockMember)
         whenever(mockAuthProvider.email).thenReturn(email)
 
-        whenever(authProviderRepository.findByEmail(email)).thenReturn(mockAuthProvider)
+        whenever(authProviderRepository.findByEmailAndProviderType(email,ProviderType.EMAIL)).thenReturn(mockAuthProvider)
         whenever(refreshTokenRepository.findActiveByMemberAndDeviceId(mockMember, deviceId)).thenReturn(existingRefreshToken)
         whenever(jwtProvider.createAccessToken(any(), any(), any())).thenReturn("access-token")
         whenever(jwtProvider.createRefreshToken(any(), any())).thenReturn("refresh-token")
@@ -382,7 +382,7 @@ class AuthServiceTest : DescribeSpec({
         whenever(mockMember.nickname).thenReturn(nickname)
         whenever(mockMember.opaqueId).thenReturn(opaqueId)
 
-        whenever(authProviderRepository.findByEmail(email)).thenReturn(null)
+        whenever(authProviderRepository.findByEmailAndProviderType(email,ProviderType.EMAIL)).thenReturn(null)
         whenever(nicknameGenerator.generate()).thenReturn(nickname)
         whenever(memberRepository.existsByNickname(nickname)).thenReturn(false)
         whenever(memberRepository.save(any<MemberEntity>())).thenReturn(mockMember)
@@ -401,7 +401,7 @@ class AuthServiceTest : DescribeSpec({
         result.refreshToken shouldBe refreshToken
         
 
-        verify(authProviderRepository).findByEmail(email)
+        verify(authProviderRepository).findByEmailAndProviderType(email,ProviderType.EMAIL)
         verify(nicknameGenerator).generate()
         verify(memberRepository).existsByNickname(nickname)
         verify(memberRepository).save(any<MemberEntity>())

@@ -52,8 +52,6 @@ class SecurityConfig(
                         "api/v1/auth/email/request", // 이메일 일증 코드 요청
                         "api/v1/auth/members/refresh", //액세스 토큰 재발급
                         "/api/public/**",         // 공개 API
-                        "/api/v1/auth/google/login",
-                        "/api/v1/auth/kakao/login",
                         "/api/v1/auth/**", // 소셜 로그인 API
                         "/actuator/health",       // 헬스체크
                         "/swagger-ui/**",         // Swagger UI

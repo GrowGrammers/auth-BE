@@ -3,7 +3,7 @@ spring:
     name: auth-BE
 
   profiles:
-    active: dev, jwt, oauth  # 공통으로 항상 적용되는 프로파일
+    active: prod, jwt, oauth  # 공통으로 항상 적용되는 프로파일
 
   mail:
     host: smtp.gmail.com
@@ -29,5 +29,3 @@ springdoc:
 app:
   time:
     default-zone: ${APP_DEFAULT_ZONE:Asia/Seoul}
-  cookie:
-    same-site: ${APP_COOKIE_SAME_SITE:Strict}

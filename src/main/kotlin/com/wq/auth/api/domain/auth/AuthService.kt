@@ -2,6 +2,7 @@ package com.wq.auth.api.domain.auth
 
 import com.wq.auth.api.domain.email.AuthEmailService
 import com.wq.auth.api.domain.auth.entity.AuthProviderEntity
+import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.auth.entity.RefreshTokenEntity
 import com.wq.auth.api.domain.member.entity.Role
@@ -38,7 +39,8 @@ class AuthService(
     @Transactional
     fun emailLogin(email: String, deviceId: String?): TokenResult {
         val existingUser =
-            authProviderRepository.findByEmail(email)?.member ?: return signUp(email, deviceId)
+            authProviderRepository.findByEmailAndProviderType(email, ProviderType.EMAIL)?.member
+                ?: return signUp(email, deviceId)
 
         // 이미 가입된 사용자 → 로그인 처리 및 JWT 발급
         val opaqueId = existingUser.opaqueId
