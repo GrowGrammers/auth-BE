@@ -8,6 +8,8 @@ import jakarta.mail.internet.InternetAddress
 import org.slf4j.LoggerFactory
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.stereotype.Service
+import java.time.Instant
+import java.time.LocalDateTime
 import java.util.*
 import javax.naming.directory.InitialDirContext
 
@@ -34,13 +36,29 @@ class AuthEmailService(
 
     fun verifyCode(email: String, code: String) {
         log.info("verifyCode() called for email={} with code={}", email, code)
-        val savedCode = emailRepository.findByEmail(email)?.code
+
+        //DB에 x
+        val emailVerificationEntity = emailRepository.findByEmail(email)
+            ?: throw EmailException(EmailExceptionCode.EMAIL_VERIFICATION_FAILED)
+
+        val savedCode = emailVerificationEntity.code
+        val createdAt = emailVerificationEntity.createdAt
+
         log.debug("Saved code from DB={} for email={}", savedCode, email)
 
-        if (savedCode == null || savedCode != code) {
-            log.warn("Email verification failed for email={}", email)
+        // 5분 제한 체크
+        val expired = createdAt.plusSeconds(300).isBefore(Instant.now())
+        if (expired) {
+            log.warn("Verification code expired for email={}", email)
+            throw EmailException(EmailExceptionCode.EMAIL_EXPIRED)
+        }
+
+        //코드 불일치
+        if (savedCode != code) {
+            log.warn("Invalid verification code for email={}", email)
             throw EmailException(EmailExceptionCode.EMAIL_VERIFICATION_FAILED)
         }
+
         log.info("Email verification success for email={}", email)
     }
 
