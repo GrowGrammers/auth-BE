@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseCookie
 import org.springframework.web.bind.annotation.*
@@ -30,6 +31,12 @@ class AuthController(
     private val authService: AuthService,
     private val emailService: AuthEmailService,
     private val jwtProperties: JwtProperties,
+
+    @Value("\${app.cookie.secure:false}")
+    private val cookieSecure: Boolean,
+
+    @Value("\${app.cookie.same-site:Strict}")
+    private val cookieSameSite: String,
 ) {
 
     @Operation(
@@ -75,12 +82,10 @@ class AuthController(
         if (clientType == "web") {
             val refreshCookie = ResponseCookie.from("refreshToken", newRefreshToken)
                 .httpOnly(true)
-                //.secure(true) 배포시
-                .secure(false)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(jwtProperties.refreshExp.toSeconds())
-                //.sameSite("None") 배포시
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build()
             response.addHeader("Set-Cookie", refreshCookie.toString())
 
@@ -134,12 +139,10 @@ class AuthController(
         if (clientType == "web") {
             val refreshCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                //.secure(true) 배포시
-                .secure(false)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(0)
-                //.sameSite("None") 배포시
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build()
             response.addHeader("Set-Cookie", refreshCookie.toString())
 
@@ -209,14 +212,13 @@ class AuthController(
         response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer ${accessToken}")
 
         if (clientType == "web") {
+
             val refreshCookie = ResponseCookie.from("refreshToken", newRefreshToken)
                 .httpOnly(true)
-                //.secure(true) 배포시
-                .secure(false)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(jwtProperties.refreshExp.toSeconds())
-                //.sameSite("None") 배포시
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build()
             response.addHeader("Set-Cookie", refreshCookie.toString())
             

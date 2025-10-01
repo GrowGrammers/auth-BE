@@ -23,3 +23,8 @@ logging:
   level:
     org.hibernate.SQL: warn
     org.springframework.orm.jpa: info
+
+app:
+  cookie:
+    secure: true
+    same-site: Strict
