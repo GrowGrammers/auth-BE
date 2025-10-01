@@ -16,6 +16,5 @@ data class EmailVerificationEntity(
     val email: String,
 
     @Column(nullable = false, length = 10)
-    val code: String,
-
+    val code: String
 ): BaseEntity()
