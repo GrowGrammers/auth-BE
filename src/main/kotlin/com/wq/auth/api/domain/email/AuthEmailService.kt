@@ -40,12 +40,12 @@ class AuthEmailService(
             ?: throw EmailException(EmailExceptionCode.EMAIL_VERIFICATION_FAILED)
 
         val savedCode = emailVerificationEntity.code
-        val createdAt = emailVerificationEntity.createdAt
+        val updatedAt = emailVerificationEntity.updatedAt
 
         log.debug("Saved code from DB={} for email={}", savedCode, email)
 
         // 5분 제한 체크
-        val expired = createdAt.plusSeconds(300).isBefore(Instant.now())
+        val expired = updatedAt.plusSeconds(300).isBefore(Instant.now())
         if (expired) {
             log.warn("Verification code expired for email={}", email)
             throw EmailException(EmailExceptionCode.EMAIL_EXPIRED)
