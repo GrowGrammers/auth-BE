@@ -1,5 +1,6 @@
 package com.wq.auth.api.domain.email.entity
 
+import com.wq.auth.shared.entity.BaseEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -15,9 +16,5 @@ data class EmailVerificationEntity(
     val email: String,
 
     @Column(nullable = false, length = 10)
-    val code: String,
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    val createdAt: Instant = Instant.now()
-)
+    val code: String
+): BaseEntity()
