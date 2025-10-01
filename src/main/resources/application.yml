@@ -29,5 +29,3 @@ springdoc:
 app:
   time:
     default-zone: ${APP_DEFAULT_ZONE:Asia/Seoul}
-  cookie:
-    same-site: ${APP_COOKIE_SAME_SITE:Strict}
