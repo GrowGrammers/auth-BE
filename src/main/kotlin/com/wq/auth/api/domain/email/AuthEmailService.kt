@@ -28,7 +28,6 @@ class AuthEmailService(
         val code = generateRandomCode()
         log.debug("Generated verification code={} for email={}", code, email)
 
-        //TODO 인증번호 5분 제한, 제거시 soft delete
         sendEmail(email, "인증 코드", "인증 코드는 $code 입니다.")
         emailRepository.save(EmailVerificationEntity(email, code))
         log.info("Verification code saved for email={}", email)
@@ -38,7 +37,7 @@ class AuthEmailService(
         log.info("verifyCode() called for email={} with code={}", email, code)
 
         //DB에 x
-        val emailVerificationEntity = emailRepository.findByEmail(email)
+        val emailVerificationEntity = emailRepository.findFirstByEmailOrderByCreatedAtDesc(email)
             ?: throw EmailException(EmailExceptionCode.EMAIL_VERIFICATION_FAILED)
 
         val savedCode = emailVerificationEntity.code
