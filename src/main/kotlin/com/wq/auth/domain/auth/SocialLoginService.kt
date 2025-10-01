@@ -32,9 +32,9 @@ class SocialLoginService(
     @Transactional
     fun processSocialLogin(request: SocialLoginRequest): SocialLoginResult {
         log.info { "소셜 로그인 처리 시작: ${request.providerType}" }
-
         return loginProviders.find{it.support(request.providerType) }
             ?.processLogin(request)
             ?:throw Exception()
     }
 }
+
