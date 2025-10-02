@@ -1,12 +1,9 @@
 package com.wq.auth.api.domain.auth
 
-import com.wq.auth.api.domain.member.MemberRepository
 import com.wq.auth.api.domain.auth.request.SocialLoginRequest
 import com.wq.auth.api.domain.auth.response.SocialLoginResult
-import com.wq.auth.api.external.oauth.GoogleOAuthClient
-import com.wq.auth.api.external.oauth.KakaoOAuthClient
-import com.wq.auth.api.external.oauth.NaverOAuthClient
-import com.wq.auth.security.jwt.JwtProvider
+import com.wq.auth.api.domain.oauth.error.SocialLoginException
+import com.wq.auth.api.domain.oauth.error.SocialLoginExceptionCode
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -38,16 +35,8 @@ class SocialLoginService(
         log.info { "소셜 로그인 처리 시작: ${request.providerType}" }
         return loginProviders.find{it.support(request.providerType) }
             ?.processLogin(request)
-            ?:throw Exception()
-        //TODO
-        //소셜 로그인이 아닌 그냥 로그인 요청인 경우의 에러처리
+            ?: throw SocialLoginException(
+                SocialLoginExceptionCode.UNSUPPORTED_PROVIDER)
 
-//        return when (request.providerType) {
-//            ProviderType.GOOGLE -> processGoogleLogin(request)
-//            ProviderType.KAKAO -> processKakaoLogin(request)
-//            ProviderType.NAVER -> processNaverLogin(request)
-//            ProviderType.EMAIL -> throw SocialLoginException(SocialLoginExceptionCode.UNSUPPORTED_PROVIDER)
-//            ProviderType.PHONE -> throw SocialLoginException(SocialLoginExceptionCode.UNSUPPORTED_PROVIDER)
-//        }
     }
 }
