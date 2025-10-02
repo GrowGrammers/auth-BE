@@ -2,11 +2,11 @@ package com.wq.auth.api.domain.auth
 
 import com.wq.auth.api.domain.auth.entity.AuthProviderEntity
 import com.wq.auth.api.domain.auth.entity.ProviderType
+import com.wq.auth.api.domain.auth.request.SocialLoginRequest
+import com.wq.auth.api.domain.auth.response.SocialLoginResult
 import com.wq.auth.api.domain.member.MemberRepository
 import com.wq.auth.api.domain.member.entity.MemberEntity
-import com.wq.auth.domain.auth.request.SocialLoginRequest
-import com.wq.auth.domain.auth.response.SocialLoginResult
-import com.wq.auth.domain.oauth.OAuthUser
+import com.wq.auth.api.domain.oauth.OAuthUser
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 interface LoginProvider {
