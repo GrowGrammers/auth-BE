@@ -58,14 +58,12 @@ class AuthServiceTest : DescribeSpec({
             // given
             val email = "test@example.com"
             val deviceId: String? = null
-            val clientType = "web"
             val memberId = 1L
             val nickname = "testUser"
             val opaqueId = "test-opaque-id"
             val accessToken = "access.token.here"
             val refreshToken = "refresh.token.here"
             val jti = "jwt-id-123"
-            val expiredTime = 1800000L
 
             val mockMember = mock<MemberEntity>()
             val mockAuthProvider = mock<AuthProviderEntity>()
@@ -101,7 +99,6 @@ class AuthServiceTest : DescribeSpec({
             // given
             val refreshToken = "valid-refresh-token"
             val deviceId = "device123"
-            val clientType = "app"
             val jti = "test-jti"
             val opaqueId = "opaqueId"
             val member = mock<MemberEntity>()
