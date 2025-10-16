@@ -96,17 +96,43 @@ abstract class AbstractLinkProvider(
     ) {
         log.info { "회원 병합 시작: ${currentMember.opaqueId} <- ${linkedMember.opaqueId}" }
 
-        // 연동된 회원의 AuthProvider를 현재 회원으로 이전
-        val linkedAuthProvider = authProviderRepository.findByMemberAndProviderType(
-            linkedMember,
-            providerType
-        ).orElseThrow {
-            AuthException(AuthExceptionCode.AUTH_PROVIDER_NOT_FOUND)
+        // 연동된 회원의 모든 AuthProvider를 조회
+        val linkedAuthProviders = authProviderRepository.findByMember(linkedMember)
+
+        if (linkedAuthProviders.isEmpty()) {
+            log.warn { "병합할 AuthProvider가 없습니다: ${linkedMember.opaqueId}" }
+            throw AuthException(AuthExceptionCode.AUTH_PROVIDER_NOT_FOUND)
         }
 
-        // AuthProvider의 member를 현재 회원으로 변경
-        linkedAuthProvider.changeMember(currentMember)
-        authProviderRepository.save(linkedAuthProvider)
+        // 현재 회원이 이미 가지고 있는 ProviderType 목록 조회 (중복 방지)
+        val currentProviderTypes = authProviderRepository.findByMember(currentMember)
+            .map { it.providerType }
+            .toSet()
+
+        //TODO
+        // 더 이전에 가입한 사용자를 남겨야함
+        // 현재 로그인된 사용자가 지워질 경우,
+        // 이렇게 바꾸면, service에서 member 정보를 바꾸고 token도 새로 발급해줘야함
+        // 연동된 회원의 모든 AuthProvider를 현재 회원으로 이전
+        linkedAuthProviders.forEach { authProvider ->
+            // 현재 회원이 이미 동일한 ProviderType을 가지고 있는 경우 스킵
+            if (currentProviderTypes.contains(authProvider.providerType)) {
+                log.warn {
+                    "현재 회원이 이미 ${authProvider.providerType}를 가지고 있습니다.: ${currentMember.opaqueId}"
+                }
+
+                //TODO
+                // 중복된 AuthProvider는 삭제 -> soft delete
+                authProviderRepository.delete(authProvider)
+            } else {
+                // AuthProvider의 member를 현재 회원으로 변경
+                authProvider.changeMember(currentMember)
+                authProviderRepository.save(authProvider)
+                log.info {
+                    "${authProvider.providerType} AuthProvider 이전 완료: ${linkedMember.opaqueId} -> ${currentMember.opaqueId}"
+                }
+            }
+        }
 
         // 연동된 회원을 soft delete 처리
         linkedMember.softDelete()
