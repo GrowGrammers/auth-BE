@@ -346,7 +346,7 @@ class SocialLoginController(
             authCode = request.authCode,
             codeVerifier = request.codeVerifier,
             state = request.state,  // 네이버는 state 사용
-            providerType = ProviderType.NAVER,  // NAVER로 수정됨
+            providerType = ProviderType.NAVER,
         )
 
         val loginResult = socialLoginService.processSocialLogin(serviceRequest.toDomain())
@@ -416,7 +416,7 @@ class SocialLoginController(
     @PostMapping("/api/v1/auth/link/google")
     fun linkGoogleAccount(
         @AuthenticationPrincipal principalDetail: PrincipalDetails,
-        @Valid @RequestBody request: GoogleSocialLoginRequestDto
+        @Valid @RequestBody request: GoogleSocialLinkRequestDto
     ): SuccessResponse<Void> {
         val serviceRequest = SocialLinkRequestDto(
             authCode = request.authCode,
@@ -489,7 +489,7 @@ class SocialLoginController(
     @PostMapping("/api/v1/auth/link/kakao")
     fun linkKakaoAccount(
         @AuthenticationPrincipal principalDetail: PrincipalDetails,
-        @Valid @RequestBody request: KakaoSocialLoginRequestDto
+        @Valid @RequestBody request: KakaoSocialLinkRequestDto
     ): SuccessResponse<Void> {
         val serviceRequest = SocialLinkRequestDto(
             authCode = request.authCode,
@@ -562,7 +562,7 @@ class SocialLoginController(
     @PostMapping("/api/v1/auth/link/naver")
     fun linkNaverAccount(
         @AuthenticationPrincipal principalDetail: PrincipalDetails,
-        @Valid @RequestBody request: NaverSocialLoginRequestDto
+        @Valid @RequestBody request: NaverSocialLinkRequestDto
     ): SuccessResponse<Void> {
         val serviceRequest = SocialLinkRequestDto(
             authCode = request.authCode,
