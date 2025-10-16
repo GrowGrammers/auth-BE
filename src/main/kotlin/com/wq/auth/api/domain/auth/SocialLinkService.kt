@@ -1,15 +1,11 @@
 package com.wq.auth.api.domain.auth
 
-import com.wq.auth.api.domain.auth.entity.ProviderType
 import com.wq.auth.api.domain.auth.request.SocialLinkRequest
 import com.wq.auth.api.domain.member.MemberRepository
-import com.wq.auth.api.domain.member.entity.MemberEntity
 import com.wq.auth.api.domain.member.error.MemberException
 import com.wq.auth.api.domain.member.error.MemberExceptionCode
 import com.wq.auth.api.domain.oauth.error.SocialLoginException
 import com.wq.auth.api.domain.oauth.error.SocialLoginExceptionCode
-import com.wq.auth.api.domain.auth.error.AuthException
-import com.wq.auth.api.domain.auth.error.AuthExceptionCode
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
