@@ -48,9 +48,9 @@ class SecurityConfig(
                 auth
                     // 공개 엔드포인트 (인증 불필요)
                     .requestMatchers(
-                        "api/v1/auth/members/email-login", // 이메일 로그인
-                        "api/v1/auth/email/request", // 이메일 일증 코드 요청
-                        "api/v1/auth/members/refresh", //액세스 토큰 재발급
+                        "/api/v1/auth/members/email-login", // 이메일 로그인
+                        "/api/v1/auth/email/request", // 이메일 일증 코드 요청
+                        "/api/v1/auth/members/refresh", //액세스 토큰 재발급
                         "/api/public/**",         // 공개 API
                         "/api/v1/auth/**", // 소셜 로그인 API, 로그아웃
                         "/actuator/health",       // 헬스체크

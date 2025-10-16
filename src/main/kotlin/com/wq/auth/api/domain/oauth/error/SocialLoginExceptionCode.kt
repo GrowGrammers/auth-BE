@@ -35,5 +35,9 @@ enum class SocialLoginExceptionCode(
     UNSUPPORTED_PROVIDER(400, "지원하지 않는 소셜 로그인 제공자입니다"),
     SOCIAL_LOGIN_PROCESSING_ERROR(500, "소셜 로그인 처리 중 오류가 발생했습니다"),
     MEMBER_CREATION_FAILED(500, "소셜 로그인 회원 생성에 실패했습니다"),
-    AUTH_PROVIDER_CREATION_FAILED(500, "인증 제공자 정보 생성에 실패했습니다")
+    AUTH_PROVIDER_CREATION_FAILED(500, "인증 제공자 정보 생성에 실패했습니다"),
+
+    // 소셜 계정 연동 관련 예외
+    ALREADY_LINKED_ACCOUNT(409, "이미 연동된 계정입니다"),
+    SOCIAL_LINK_PROCESSING_ERROR(500, "소셜 계정 연동 처리 중 오류가 발생했습니다"),
 }
