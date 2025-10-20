@@ -1,5 +1,6 @@
 package com.wq.auth.api.controller.auth
 
+import com.wq.auth.api.controller.auth.request.EmailLoginLinkRequestDto
 import com.wq.auth.api.controller.auth.request.EmailLoginRequestDto
 import com.wq.auth.api.controller.auth.request.LogoutRequestDto
 import com.wq.auth.api.controller.auth.request.RefreshAccessTokenRequestDto
@@ -7,8 +8,10 @@ import com.wq.auth.api.controller.auth.response.LoginResponseDto
 import com.wq.auth.api.controller.auth.response.RefreshAccessTokenResponseDto
 import com.wq.auth.api.domain.auth.AuthService
 import com.wq.auth.api.domain.email.AuthEmailService
+import com.wq.auth.security.annotation.AuthenticatedApi
 import com.wq.auth.security.annotation.PublicApi
 import com.wq.auth.security.jwt.JwtProperties
+import com.wq.auth.security.principal.PrincipalDetails
 import com.wq.auth.web.common.response.BaseResponse
 import com.wq.auth.web.common.response.FailResponse
 import com.wq.auth.web.common.response.Responses
@@ -20,12 +23,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseCookie
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
-@Tag(name = "회원", description = "로그인, 로그아웃 등 회원 관련 API")
+@Tag(name = "인증/인가", description = "로그인, 로그아웃 등 인증/인가 관련 API")
 @RestController
 class AuthController(
     private val authService: AuthService,
@@ -97,6 +102,69 @@ class AuthController(
             refreshToken = newRefreshToken
         )
         return Responses.success(message = "로그인에 성공했습니다.", data = resp)
+    }
+
+
+    /**
+     * 이메일 인증 코드 확인 및 계정 연동
+     *
+     * 사용자가 입력한 인증 코드를 확인하고 이메일 계정을 연동합니다.
+     *
+     * @param principalDetail 현재 로그인된 사용자 정보 (Security Context에서 자동 주입)
+     * @param request 이메일 인증 확인 요청
+     * @return 계정 연동 성공 응답
+     */
+    @Operation(
+        summary = "이메일 인증 코드 확인 및 계정 연동",
+        description = """
+            사용자가 입력한 인증 코드를 확인하고 이메일 계정을 연동합니다.
+            
+            **사용 방법:**
+            1. 이메일로 받은 6자리 인증 코드를 입력
+            2. 인증 성공 시 이메일 계정 연동 완료
+            
+            **연동 프로세스:**
+            - 인증 코드 유효성 확인 (만료 시간, 코드 일치 여부)
+            - AuthProvider 엔티티에 EMAIL 타입 추가
+            - 인증 코드 삭제
+            
+            **인증 요구사항:**
+            - Authorization 헤더에 유효한 JWT 토큰 필요
+            - 토큰은 재발급되지 않으며 기존 토큰 그대로 사용
+        """
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "이메일 계정 연동 성공",
+                content = [Content(schema = Schema(implementation = SuccessResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "인증 코드가 존재하지 않거나, 만료되었거나, 일치하지 않음",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "인증되지 않은 사용자",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "서버 내부 오류",
+                content = [Content(schema = Schema(implementation = FailResponse::class))]
+            )
+        ]
+    )
+    @AuthenticatedApi
+    @PostMapping("/api/v1/auth/link/email-login")
+    fun verifyEmailLink(
+        @AuthenticationPrincipal principalDetail: PrincipalDetails,
+        @Valid @RequestBody request: EmailLoginLinkRequestDto
+    ): SuccessResponse<Void> {
+        authService.processEmailLoginLink(principalDetail.opaqueId, request.toDomain())
+        return Responses.success("이메일 계정이 성공적으로 연동되었습니다.")
     }
 
     @Operation(

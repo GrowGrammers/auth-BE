@@ -3,7 +3,7 @@ package com.wq.auth.api.controller.auth.request
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank
 
-@Schema(description = "카카오 소셜 로그인 요청 바디")
+@Schema(description = "카카오 소셜 로그인 연동 요청 바디")
 data class KakaoSocialLinkRequestDto(
     @field:NotBlank(message = "authCode는 필수입니다")
     @field:Schema(description = "카카오 OAuth2에서 받은 인가 코드", example = "9d8fYl7x2zQ...")

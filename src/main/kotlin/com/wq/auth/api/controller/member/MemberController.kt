@@ -7,9 +7,11 @@ import com.wq.auth.security.annotation.AuthenticatedApi
 import com.wq.auth.security.principal.PrincipalDetails
 import com.wq.auth.web.common.response.Responses
 import com.wq.auth.web.common.response.SuccessResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
+@Tag(name = "회원", description = "유저 정보 조회등 회원 관련 API")
 @RestController
 class MemberController(
     private val memberService: MemberService,
