@@ -98,6 +98,21 @@ open class MemberEntity protected constructor(
     }
 
     /**
+     * 최근 로그인 시간 업데이트
+     */
+    fun updateLastLoginAt() {
+        this.lastLoginAt = LocalDateTime.now()
+    }
+
+    /**
+     * 회원을 soft delete 처리합니다.
+     * 실제로 데이터를 삭제하지 않고 isDeleted 플래그만 변경합니다.
+     */
+    fun softDelete() {
+        this.isDeleted = true
+    }
+
+    /**
      * 관리자 권한 확인
      */
     fun isAdmin(): Boolean = role == Role.ADMIN

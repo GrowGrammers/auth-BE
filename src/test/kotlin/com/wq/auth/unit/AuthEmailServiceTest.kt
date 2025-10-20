@@ -11,6 +11,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import org.mockito.kotlin.*
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.mail.javamail.JavaMailSender
+import java.time.Instant
 
 class AuthEmailServiceTest : StringSpec({
 
@@ -56,10 +57,13 @@ class AuthEmailServiceTest : StringSpec({
     "인증 코드 검증 성공" {
         val email = "user@gmail.com"
         val code = "123456"
-        val entity = EmailVerificationEntity(email, code)
+        val entity = EmailVerificationEntity(email, code).apply {
+            createdAt = Instant.now()
+            updatedAt = Instant.now()
+        }
 
         // repository 동작 모킹
-        whenever(emailRepository.findByEmail(email)).thenReturn(entity)
+        whenever(emailRepository.findFirstByEmailOrderByCreatedAtDesc(email)).thenReturn(entity)
 
         authEmailService.verifyCode(email, code)
     }
@@ -67,10 +71,13 @@ class AuthEmailServiceTest : StringSpec({
     "잘못된 인증 코드 검증 시 EMAIL_VERIFICATION_FAILED EmailException 발생" {
         val email = "user@gmail.com"
         val code = "123456"
-        val entity = EmailVerificationEntity(email, code)
+        val entity = EmailVerificationEntity(email, code).apply {
+            createdAt = Instant.now()
+            updatedAt = Instant.now()
+        }
 
         // repository 동작 모킹
-        whenever(emailRepository.findByEmail(email)).thenReturn(entity)
+        whenever(emailRepository.findFirstByEmailOrderByCreatedAtDesc(email)).thenReturn(entity)
 
         val exception = shouldThrow<EmailException> {
             authEmailService.verifyCode(email, "wrong-code")
