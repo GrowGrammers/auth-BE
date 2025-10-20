@@ -151,11 +151,6 @@ class AuthController(
                 content = [Content(schema = Schema(implementation = FailResponse::class))]
             ),
             ApiResponse(
-                responseCode = "403",
-                description = "권한이 없음 (다른 사용자의 인증 코드)",
-                content = [Content(schema = Schema(implementation = FailResponse::class))]
-            ),
-            ApiResponse(
                 responseCode = "500",
                 description = "서버 내부 오류",
                 content = [Content(schema = Schema(implementation = FailResponse::class))]
