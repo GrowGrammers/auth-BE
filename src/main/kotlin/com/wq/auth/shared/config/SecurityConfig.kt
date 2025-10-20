@@ -29,6 +29,7 @@ class SecurityConfig(
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         return http
+            .cors { } //Security 필터 체인에 CORS 적용
             // CSRF 보호 비활성화 (JWT 사용 시 불필요)
             .csrf { it.disable() }
             
@@ -52,7 +53,8 @@ class SecurityConfig(
                         "/api/v1/auth/email/request", // 이메일 일증 코드 요청
                         "/api/v1/auth/members/refresh", //액세스 토큰 재발급
                         "/api/public/**",         // 공개 API
-                        "/api/v1/auth/**", // 소셜 로그인 API, 로그아웃
+                        "/api/v1/auth/*/login", // 소셜 로그인 API
+                        "api/v1/auth/members/logout", //로그아웃
                         "/actuator/health",       // 헬스체크
                         "/swagger-ui/**",         // Swagger UI
                         "/v3/api-docs/**",        // OpenAPI 문서
