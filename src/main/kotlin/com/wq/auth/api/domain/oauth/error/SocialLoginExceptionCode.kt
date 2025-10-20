@@ -30,10 +30,15 @@ enum class SocialLoginExceptionCode(
     NAVER_USER_INFO_REQUEST_FAILED(400, "네이버 사용자 정보 조회가 실패했습니다"),
     NAVER_SERVER_ERROR(502, "Naver 서버에서 일시적인 오류가 발생했습니다"),
     NAVER_INVALID_ACCESS_TOKEN(401, "유효하지 않은 Naver 액세스 토큰입니다"),
+    NAVER_INVALID_STATE(400, "유효하지 않은 네이버 state 값입니다"),
 
     // 공통 소셜 로그인 예외
     UNSUPPORTED_PROVIDER(400, "지원하지 않는 소셜 로그인 제공자입니다"),
     SOCIAL_LOGIN_PROCESSING_ERROR(500, "소셜 로그인 처리 중 오류가 발생했습니다"),
     MEMBER_CREATION_FAILED(500, "소셜 로그인 회원 생성에 실패했습니다"),
-    AUTH_PROVIDER_CREATION_FAILED(500, "인증 제공자 정보 생성에 실패했습니다")
+    AUTH_PROVIDER_CREATION_FAILED(500, "인증 제공자 정보 생성에 실패했습니다"),
+
+    // 소셜 계정 연동 관련 예외
+    ALREADY_LINKED_ACCOUNT(409, "이미 연동된 계정입니다"),
+    SOCIAL_LINK_PROCESSING_ERROR(500, "소셜 계정 연동 처리 중 오류가 발생했습니다"),
 }

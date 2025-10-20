@@ -37,6 +37,14 @@ open class AuthProviderEntity(
         this.email = newEmail
     }
 
+    /**
+     * AuthProvider의 소유 회원을 변경합니다.
+     * 계정 병합시 사용됩니다.
+     */
+    fun changeMember(newMember: MemberEntity) {
+        this.member = newMember
+    }
+
     companion object {
         fun createEmailProvider(member: MemberEntity, email: String) =
             AuthProviderEntity(
