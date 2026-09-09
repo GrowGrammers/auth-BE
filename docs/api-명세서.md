@@ -293,6 +293,7 @@ Rate limit: 요청 3회/10분, 검증 10회/5분 (컨트롤러 기준).
 ```
 
 - `Cache-Control: max-age=3600, public`
+- `Accept: application/jwk-set+json` 도 받는다.
 - 토큰 헤더의 `kid` 와 같은 키로 검증한다. 검증자는 `alg` 를 `RS256` 으로 고정해야 한다.
 - 공개키만 담긴다. 개인키는 auth-api 만 가진다.
 
