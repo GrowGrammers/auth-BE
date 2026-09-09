@@ -5,24 +5,27 @@ import com.wq.auth.security.jwt.error.JwtExceptionCode
 import com.github.f4b6a3.uuid.UuidCreator
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
+import io.jsonwebtoken.JwtParser
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.MalformedJwtException
 import io.jsonwebtoken.UnsupportedJwtException
-import io.jsonwebtoken.io.Decoders
-import io.jsonwebtoken.security.Keys
 import io.jsonwebtoken.security.SignatureException
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.*
-import javax.crypto.SecretKey
 
 @Component
 class JwtProvider(
-    private val jwtProperties: JwtProperties
+    private val jwtProperties: JwtProperties,
+    private val jwtKeys: JwtKeys,
 ) {
-    private val key: SecretKey = Keys.hmacShaKeyFor(
-        Decoders.BASE64.decode(jwtProperties.secret)
-    )
+    /**
+     * 검증 키는 헤더를 보고 [JwtKeyLocator] 가 고른다 — RS256 은 공개키, HS256 은 레거시 시크릿(있을 때만).
+     * JwtParser 는 스레드 안전하므로 한 번 만들어 재사용한다.
+     */
+    private val parser: JwtParser = Jwts.parser()
+        .keyLocator(JwtKeyLocator(jwtKeys))
+        .build()
 
     fun createAccessToken(
         opaqueId: String,
@@ -32,6 +35,7 @@ class JwtProvider(
         val exp = Date.from(now.plus(jwtProperties.accessExp))
 
         return Jwts.builder()
+            .header().keyId(jwtKeys.keyId).and()
             .subject(opaqueId)
             .issuedAt(Date.from(now))
             .expiration(exp)
@@ -40,7 +44,7 @@ class JwtProvider(
                     claim(key, value)
                 }
             }
-            .signWith(key, Jwts.SIG.HS256)
+            .signWith(jwtKeys.privateKey, Jwts.SIG.RS256)
             .compact()
     }
 
@@ -52,11 +56,12 @@ class JwtProvider(
         val exp = Date.from(now.plus(jwtProperties.refreshExp))
 
         return Jwts.builder()
+            .header().keyId(jwtKeys.keyId).and()
             .subject(opaqueId)
             .id(jti)                 // jti 클레임: RefreshToken 고유 식별자
             .issuedAt(Date.from(now))
             .expiration(exp)
-            .signWith(key, Jwts.SIG.HS256)
+            .signWith(jwtKeys.privateKey, Jwts.SIG.RS256)
             .compact()
     }
 
@@ -66,8 +71,7 @@ class JwtProvider(
      * @return 사용자의 opaqueId (UUID)
      */
     fun getOpaqueId(token: String): String =
-        Jwts.parser().verifyWith(key)
-            .build().parseSignedClaims(token)
+        parser.parseSignedClaims(token)
             .payload
             .subject
 
@@ -77,8 +81,7 @@ class JwtProvider(
      * @return JWT ID (RefreshToken 고유 식별자)
      */
     fun getJti(token: String): String =
-        Jwts.parser().verifyWith(key)
-            .build().parseSignedClaims(token)
+        parser.parseSignedClaims(token)
             .payload
             .id
 
@@ -95,8 +98,7 @@ class JwtProvider(
      * @return 발급 시각
      */
     fun getIssuedAt(token: String): Instant =
-        Jwts.parser().verifyWith(key)
-            .build().parseSignedClaims(token)
+        parser.parseSignedClaims(token)
             .payload
             .issuedAt.toInstant()
 
@@ -106,8 +108,7 @@ class JwtProvider(
      * @return 모든 클레임을 담은 Map
      */
     fun getAllClaims(token: String): Map<String, Any> =
-        Jwts.parser().verifyWith(key)
-            .build().parseSignedClaims(token)
+        parser.parseSignedClaims(token)
             .payload
 
     /**
@@ -120,8 +121,7 @@ class JwtProvider(
      * RefreshToken의 만료 시각을 반환합니다.
      */
     fun getRefreshTokenExpiredAt(token: String): Instant =
-        Jwts.parser().verifyWith(key)
-            .build().parseSignedClaims(token)
+        parser.parseSignedClaims(token)
             .payload
             .expiration.toInstant()
 
@@ -134,7 +134,7 @@ class JwtProvider(
      */
     fun getRemainingTimeSeconds(token: String): Long {
         return try {
-            val expiration = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload.expiration
+            val expiration = parser.parseSignedClaims(token).payload.expiration
             (expiration.time - System.currentTimeMillis()) / 1000
         } catch (e: ExpiredJwtException) {
             -1L
@@ -152,7 +152,7 @@ class JwtProvider(
      */
     fun getClaimsEvenIfExpired(token: String): Claims {
         return try {
-            Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload
+            parser.parseSignedClaims(token).payload
         } catch (e: ExpiredJwtException) {
             e.claims
         } catch (t: Throwable) {
@@ -166,13 +166,14 @@ class JwtProvider(
      */
     fun validateOrThrow(token: String) {
         try {
-            Jwts.parser().verifyWith(key).build().parseSignedClaims(token)
+            parser.parseSignedClaims(token)
         } catch (throwable: Throwable) {
             throw JwtException(mapToCode(throwable), throwable)
         }
     }
 
     private fun mapToCode(throwable: Throwable): JwtExceptionCode = when (throwable) {
+        is JwtException                     -> throwable.jwtCode   // JwtKeyLocator 가 거부한 경우
         is SignatureException,
         is SecurityException                -> JwtExceptionCode.INVALID_SIGNATURE
         is MalformedJwtException            -> JwtExceptionCode.MALFORMED

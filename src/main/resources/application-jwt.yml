@@ -1,4 +1,8 @@
 jwt:
-  secret: ${JWT_SECRET}
+  # RS256 서명용 PKCS#8 개인키. PEM 헤더·푸터·개행을 뺀 한 줄 base64. 필수.
+  private-key: ${JWT_PRIVATE_KEY}
+  # HS256 레거시 검증 전용. 전환 기간이 끝나면 환경 변수를 지운다. 기본값 비어 있음.
+  # 환경 변수 이름은 기존 JWT_SECRET 을 그대로 써서 배포 중인 .env 를 고치지 않아도 되게 한다.
+  legacy-secret: ${JWT_SECRET:}
   access-exp: ${JWT_ACCESS_TOKEN_EXPIRATION}
   refresh-exp: ${JWT_REFRESH_TOKEN_EXPIRATION}
