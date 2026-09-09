@@ -193,6 +193,7 @@ Rate limit: 요청 3회/10분, 검증 10회/5분 (컨트롤러 기준).
 | POST | `/api/v1/auth/members/logout` | 불필요 (리프레시 토큰으로 식별) | **필수** |
 | POST | `/api/v1/auth/members/refresh` | 불필요 (리프레시 토큰) | **필수** |
 | GET | `/api/v1/auth/introspect` | 불필요 (토큰으로 검증) | 선택 |
+| GET | `/.well-known/jwks.json` | 불필요 | 없음 |
 
 #### 3.1 이메일 로그인/가입 `POST /api/v1/auth/members/email-login`
 
@@ -271,6 +272,7 @@ Rate limit: 요청 3회/10분, 검증 10회/5분 (컨트롤러 기준).
 - 유효한 AT로부터 사용자 UUID(`opaqueId`)를 구해 응답 헤더에 설정.
 - AT 남은 시간이 5분 미만이거나 만료된 경우, `refreshToken` 쿠키로 **사일런트 리프레시** 시도 후 새 쿠키 `Set-Cookie`.
 - 실패 시 401 및 쿠키 제거 가능.
+- AT·RT 는 RS256 으로 서명되며 헤더에 `kid` 가 있다. `JWT_SECRET` 이 설정된 전환 기간에는 HS256 토큰도 검증한다.
 
 **성공 응답 헤더**
 
@@ -279,6 +281,20 @@ Rate limit: 요청 3회/10분, 검증 10회/5분 (컨트롤러 기준).
 | `X-User-Id` | 사용자 UUID (opaqueId) |
 
 응답 본문은 컨트롤러에서 별도 JSON을 쓰지 않을 수 있음(상태 200 + 헤더 중심).
+
+#### 3.6 JWKS `GET /.well-known/jwks.json`
+
+**목적**: AT·RT 서명(RS256) 검증용 공개키 배포. 게이트웨이 없이 토큰을 로컬 검증하는 서비스가 기동 시 받아 캐시한다.
+
+**응답** — RFC 7517 JWK Set. `CommonResponse` 로 감싸지 않는다.
+
+```json
+{ "keys": [ { "kty": "RSA", "use": "sig", "alg": "RS256", "kid": "<썸프린트>", "n": "…", "e": "AQAB" } ] }
+```
+
+- `Cache-Control: max-age=3600, public`
+- 토큰 헤더의 `kid` 와 같은 키로 검증한다. 검증자는 `alg` 를 `RS256` 으로 고정해야 한다.
+- 공개키만 담긴다. 개인키는 auth-api 만 가진다.
 
 ---
 
