@@ -30,7 +30,12 @@ class JwksController(
         description = "AT·RT 서명(RS256) 검증용 공개키 목록. 토큰 헤더의 kid 와 맞는 키로 검증한다."
     )
     @PublicApi
-    @GetMapping("/.well-known/jwks.json", produces = [MediaType.APPLICATION_JSON_VALUE])
+    // RFC 7517 은 JWK Set 의 미디어 타입으로 application/jwk-set+json 을 둔다.
+    // 표준 클라이언트가 그 타입만 Accept 로 보내도 200 이 나가야 한다.
+    @GetMapping(
+        "/.well-known/jwks.json",
+        produces = [MediaType.APPLICATION_JSON_VALUE, "application/jwk-set+json"]
+    )
     fun jwks(): ResponseEntity<Map<String, Any>> {
         // RsaPublicJwk 는 Map 이지만 jjwt 고유 타입이라 직렬화 특성을 타지 않도록 평범한 Map 으로 복사한다.
         val key: Map<String, Any> = LinkedHashMap(jwtKeys.publicJwk)

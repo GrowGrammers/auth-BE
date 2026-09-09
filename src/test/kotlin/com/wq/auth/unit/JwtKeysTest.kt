@@ -8,6 +8,7 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
 
 class JwtKeysTest : StringSpec({
@@ -57,5 +58,21 @@ class JwtKeysTest : StringSpec({
         shouldThrow<IllegalArgumentException> {
             JwtKeys(java.util.Base64.getEncoder().encodeToString("not-a-key".toByteArray()))
         }
+    }
+
+    "2048비트 미만 RSA 키는 기동을 막는다" {
+        // 약한 키는 커밋하지 않는다 — 테스트 시점에 만든다.
+        val weakPair = java.security.KeyPairGenerator.getInstance("RSA")
+            .apply { initialize(1024) }
+            .generateKeyPair()
+        val weakB64 = java.util.Base64.getEncoder().encodeToString(weakPair.private.encoded)
+
+        val ex = shouldThrow<IllegalArgumentException> { JwtKeys(weakB64) }
+        ex.message.shouldNotBeNull().shouldContain("2048")
+    }
+
+    "개행이 섞인 base64 도 읽는다" {
+        val wrapped = TestJwtKeys.PRIVATE_KEY_B64.chunked(64).joinToString("\n")
+        JwtKeys(wrapped).keyId shouldBe TestJwtKeys.keys().keyId
     }
 })

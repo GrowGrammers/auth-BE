@@ -3,6 +3,7 @@ package com.wq.auth.security.jwt
 import com.wq.auth.security.jwt.error.JwtException
 import com.wq.auth.security.jwt.error.JwtExceptionCode
 import io.jsonwebtoken.JwsHeader
+import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.LocatorAdapter
 import java.security.Key
 
@@ -23,10 +24,10 @@ class JwtKeyLocator(private val keys: JwtKeys) : LocatorAdapter<Key>() {
 
     override fun locate(header: JwsHeader): Key {
         return when (header.algorithm) {
-            "RS256" ->
+            Jwts.SIG.RS256.id ->
                 if (header.keyId == keys.keyId) keys.publicKey
                 else throw JwtException(JwtExceptionCode.INVALID_SIGNATURE)
-            "HS256" ->
+            Jwts.SIG.HS256.id ->
                 keys.legacySecretKey ?: throw JwtException(JwtExceptionCode.INVALID_SIGNATURE)
             else -> throw JwtException(JwtExceptionCode.INVALID_SIGNATURE)
         }

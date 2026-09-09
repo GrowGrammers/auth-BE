@@ -8,8 +8,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -53,6 +55,7 @@ class JwksControllerIntegrationTest {
     fun `토큰 없이 JWKS 를 읽을 수 있고 공개 파라미터만 담긴다`() {
         mockMvc.perform(get("/.well-known/jwks.json"))
             .andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
             // Spring 이 지시어를 max-age 먼저 내보낸다. 의미는 public + 1시간 캐시로 동일하다.
             .andExpect(header().string("Cache-Control", "max-age=3600, public"))
             .andExpect(jsonPath("$.keys.length()").value(1))
@@ -65,5 +68,17 @@ class JwksControllerIntegrationTest {
             .andExpect(jsonPath("$.keys[0].d").doesNotExist())
             .andExpect(jsonPath("$.keys[0].p").doesNotExist())
             .andExpect(jsonPath("$.success").doesNotExist())   // CommonResponse 로 감싸지 않는다
+    }
+
+    /**
+     * RFC 7517 이 정한 JWK Set 미디어 타입만 Accept 로 보내는 표준 클라이언트도 있다.
+     * 그 경우에도 406 이 아니라 200 이 나가야 한다.
+     */
+    @Test
+    fun `jwk-set+json 만 Accept 해도 200 으로 내려준다`() {
+        mockMvc.perform(get("/.well-known/jwks.json").accept(MediaType.parseMediaType("application/jwk-set+json")))
+            .andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.parseMediaType("application/jwk-set+json")))
+            .andExpect(jsonPath("$.keys[0].kid").value(jwtKeys.keyId))
     }
 }

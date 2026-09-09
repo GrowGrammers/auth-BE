@@ -76,6 +76,10 @@ class JwtProviderTest : StringSpec({
         provider.getOpaqueId(provider.createRefreshToken(opaqueId)) shouldBe opaqueId
     }
 
+    "RS256 토큰은 validateOrThrow 를 통과한다" {
+        provider.validateOrThrow(provider.createAccessToken(opaqueId))
+    }
+
     "다른 키쌍으로 서명한 토큰은 INVALID_SIGNATURE" {
         val other = anotherKeys()
         val tokenByOther = Jwts.builder().header().keyId(other.keyId).and()
@@ -153,12 +157,13 @@ class JwtProviderTest : StringSpec({
         ex.jwtCode shouldBe JwtExceptionCode.MALFORMED
     }
 
-    "alg=none 토큰은 통과하지 않는다" {
+    "alg=none 토큰은 UNSUPPORTED" {
         val headerB64 = Encoders.BASE64URL.encode("""{"alg":"none","typ":"JWT"}""".toByteArray())
         val payloadB64 = Encoders.BASE64URL.encode("""{"sub":"user-123"}""".toByteArray())
         val sigB64 = Encoders.BASE64URL.encode("sig".toByteArray())
+        // parseSignedClaims 는 unsecured JWS 를 UnsupportedJwtException 으로 확정적으로 거부한다.
         val ex = shouldThrow<JwtException> { provider.validateOrThrow("$headerB64.$payloadB64.$sigB64") }
-        (ex.jwtCode == JwtExceptionCode.UNSUPPORTED || ex.jwtCode == JwtExceptionCode.INVALID_SIGNATURE).shouldBeTrue()
+        ex.jwtCode shouldBe JwtExceptionCode.UNSUPPORTED
     }
 
     "빈 토큰 문자열이면 TOKEN_MISSING" {

@@ -45,6 +45,9 @@ class JwtKeys(
         privateKey = crtKey
         publicKey = KeyFactory.getInstance("RSA")
             .generatePublic(RSAPublicKeySpec(crtKey.modulus, crtKey.publicExponent)) as RSAPublicKey
+        require(publicKey.modulus.bitLength() >= 2048) {
+            "jwt.private-key 가 ${publicKey.modulus.bitLength()}비트입니다. RS256 은 2048비트 이상이어야 합니다."
+        }
         publicJwk = Jwks.builder()
             .key(publicKey)
             .publicKeyUse("sig")
@@ -57,8 +60,9 @@ class JwtKeys(
     }
 
     private fun loadPkcs8(base64: String): RSAPrivateCrtKey {
+        // PEM 을 한 줄로 만들 때 개행이 남거나, 설정 파일에서 여러 줄로 접히는 일이 흔하다. 공백은 전부 지우고 디코딩한다.
         val bytes = try {
-            java.util.Base64.getDecoder().decode(base64.trim())
+            java.util.Base64.getDecoder().decode(base64.replace(Regex("\\s"), ""))
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException("jwt.private-key 가 올바른 base64 가 아닙니다.", e)
         }

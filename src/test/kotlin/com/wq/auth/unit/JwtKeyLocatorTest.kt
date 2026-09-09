@@ -60,6 +60,19 @@ class JwtKeyLocatorTest : StringSpec({
         ex.jwtCode shouldBe JwtExceptionCode.INVALID_SIGNATURE
     }
 
+    "RS256·HS256 이 아닌 alg(ES256) 는 레거시 시크릿 유무와 무관하게 INVALID_SIGNATURE" {
+        val pair = Jwts.SIG.ES256.keyPair().build()
+        val es256 = Jwts.builder().header().keyId(keysNoLegacy.keyId).and()
+            .subject("user-1")
+            .signWith(pair.private, Jwts.SIG.ES256)
+            .compact()
+
+        listOf(keysNoLegacy, keysWithLegacy).forEach { keys ->
+            val ex = shouldThrow<JwtException> { parserFor(keys).parseSignedClaims(es256) }
+            ex.jwtCode shouldBe JwtExceptionCode.INVALID_SIGNATURE
+        }
+    }
+
     "알고리즘 혼동 — 공개키 바이트를 HMAC 시크릿으로 쓴 HS256 토큰은 거부된다 (시크릿 없음)" {
         val forged = Jwts.builder().header().keyId(keysNoLegacy.keyId).and()
             .subject("attacker")

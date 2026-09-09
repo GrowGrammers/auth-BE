@@ -10,6 +10,7 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.MalformedJwtException
 import io.jsonwebtoken.UnsupportedJwtException
 import io.jsonwebtoken.security.SignatureException
+import io.jsonwebtoken.security.SecurityException as JjwtSecurityException
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.*
@@ -172,10 +173,19 @@ class JwtProvider(
         }
     }
 
+    /**
+     * jjwt 예외를 도메인 코드로 옮긴다.
+     *
+     * 타입을 정확히 짚는 것이 중요하다 —
+     * - `JwtException` 은 도메인 예외 [com.wq.auth.security.jwt.error.JwtException] 이다(jjwt 의 동명 타입이 아니다).
+     * - [JjwtSecurityException] 은 `io.jsonwebtoken.security.SecurityException` 이다. 별칭 없이 `SecurityException`
+     *   이라고 쓰면 `java.lang.SecurityException` 이 잡혀 서명 오류가 MALFORMED 로 흘러간다.
+     * - jjwt 의 [SignatureException] 은 [JjwtSecurityException] 의 하위 타입이므로 한 분기로 합쳐 둔다.
+     */
     private fun mapToCode(throwable: Throwable): JwtExceptionCode = when (throwable) {
         is JwtException                     -> throwable.jwtCode   // JwtKeyLocator 가 거부한 경우
         is SignatureException,
-        is SecurityException                -> JwtExceptionCode.INVALID_SIGNATURE
+        is JjwtSecurityException            -> JwtExceptionCode.INVALID_SIGNATURE
         is MalformedJwtException            -> JwtExceptionCode.MALFORMED
         is ExpiredJwtException              -> JwtExceptionCode.EXPIRED
         is UnsupportedJwtException          -> JwtExceptionCode.UNSUPPORTED
