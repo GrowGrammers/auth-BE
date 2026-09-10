@@ -48,8 +48,10 @@ grep -v '^-----' jwt-private.pem | tr -d '\n' | pbcopy   # JWT_PRIVATE_KEY 값�
 등록: GitHub 저장소 **Settings → Environments → (alpha | production) → `AUTH_BE_ENV_FILE`** 을 열어 아래 줄을 추가합니다. 환경마다 키를 따로 만듭니다. 배포 워크플로가 이 시크릿을 EC2 의 `env/auth-api.env` 로 복사하므로 서버에서 손댈 것은 없습니다.
 
 ```
-JWT_PRIVATE_KEY=MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQD...   # 한 줄
+JWT_PRIVATE_KEY=MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQD...==
 ```
+
+값 뒤에 **주석·따옴표·공백을 붙이지 않습니다.** `# 메모` 처럼 뒤에 붙인 글자는 값의 일부로 읽혀 `jwt.private-key 가 올바른 base64 가 아닙니다 … incorrect ending byte at 1624` 로 기동이 실패합니다. 2048비트 키의 한 줄 base64 는 정확히 1624자이고 `==` 로 끝납니다.
 
 - 청첩장(alpha·prod): `JWT_SECRET` 줄은 그대로 두고 이 줄만 추가합니다(아래 전환 절차).
 - lnb: `JWT_PRIVATE_KEY` 만 넣고 `JWT_SECRET` 은 넣지 않습니다.
