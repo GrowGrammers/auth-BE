@@ -66,7 +66,8 @@ class SecurityConfig(
                         "/actuator/health",       // 헬스체크
                         "/swagger-ui/**",         // Swagger UI
                         "/v3/api-docs/**",        // OpenAPI 문서
-                        "/api/v1/auth/introspect"
+                        "/api/v1/auth/introspect",
+                        "/.well-known/jwks.json"  // 공개키 배포 (lnb-api 등 외부 검증자)
                     ).permitAll()
                     
                     // 나머지 모든 요청은 인증 필요 (세부 권한은 @PreAuthorize로 처리)

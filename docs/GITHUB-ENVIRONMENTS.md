@@ -20,6 +20,8 @@
 | `EC2_KEY` | SSH 비밀키 — **PEM 원문** 또는 **Base64** |
 | `AUTH_BE_ENV_FILE` | 앱 런타임용 `.env` 전체 (멀티라인) |
 
+`AUTH_BE_ENV_FILE` 에는 `JWT_PRIVATE_KEY`(한 줄 base64 PKCS#8) 가 있어야 합니다. HS256 에서 전환 중인 환경은 `JWT_SECRET` 을 RT 만료 기간 동안 함께 두었다가 지웁니다. 키 생성 방법은 README 의 "JWT 서명 키" 절을 참고하세요.
+
 ## 기존 Secret에서 이전할 때
 
 - `PROD_AUTH_BE_ENV_FILE` / `ALPHA_AUTH_BE_ENV_FILE` → 각 환경의 `AUTH_BE_ENV_FILE`

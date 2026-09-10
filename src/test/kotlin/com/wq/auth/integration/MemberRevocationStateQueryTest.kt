@@ -2,6 +2,7 @@ package com.wq.auth.integration
 
 import com.wq.auth.api.domain.member.MemberRepository
 import com.wq.auth.api.domain.member.entity.MemberEntity
+import com.wq.auth.support.TestJwtKeys
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -18,7 +19,7 @@ import java.time.Instant
  */
 @SpringBootTest(
     properties = [
-        "jwt.secret=MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=",
+        "jwt.private-key=" + TestJwtKeys.PRIVATE_KEY_B64,
         "jwt.access-exp=15m",
         "jwt.refresh-exp=14d",
         "INTERNAL_API_SECRET=test-internal-secret",

@@ -1,6 +1,7 @@
 package com.wq.auth.integration.security
 
 import com.wq.auth.security.jwt.JwtProvider
+import com.wq.auth.support.TestJwtKeys
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.shouldBe
@@ -34,7 +35,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
         "spring.datasource.password=",
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
-        "jwt.secret=MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=",
+        "jwt.private-key=" + TestJwtKeys.PRIVATE_KEY_B64,
         "jwt.access-exp=15m",
         "jwt.refresh-exp=14d",
         "spring.mail.host=localhost",

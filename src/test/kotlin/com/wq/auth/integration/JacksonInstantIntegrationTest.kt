@@ -6,6 +6,7 @@ import com.wq.auth.integration._tnote._TNote
 import com.wq.auth.integration._tnote._TNoteRepository
 import com.wq.auth.security.jwt.JwtProvider
 import com.wq.auth.security.principal.PrincipalDetails
+import com.wq.auth.support.TestJwtKeys
 import com.wq.auth.shared.rateLimiter.RateLimiterInterceptor
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.extensions.spring.SpringExtension
@@ -28,7 +29,7 @@ import java.time.ZoneOffset
 
 @SpringBootTest(
     properties = [
-        "jwt.secret=MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=",
+        "jwt.private-key=" + TestJwtKeys.PRIVATE_KEY_B64,
         "jwt.access-exp=15m",
         "jwt.refresh-exp=14d",
         "INTERNAL_API_SECRET=test-internal-secret",
