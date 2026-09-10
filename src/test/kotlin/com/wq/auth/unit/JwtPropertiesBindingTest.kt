@@ -1,6 +1,7 @@
 package com.wq.auth.unit
 
 import com.wq.auth.security.jwt.JwtProperties
+import com.wq.auth.support.TestJwtKeys
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,8 +30,8 @@ import java.time.Duration
 )
 @ConfigurationPropertiesScan
 @TestPropertySource(properties = [
-    // 32바이트(256bit) Base64 시크릿 예시
-    "jwt.secret=MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE===",
+    "jwt.private-key=" + TestJwtKeys.PRIVATE_KEY_B64,
+    "jwt.legacy-secret=" + TestJwtKeys.LEGACY_SECRET_B64,
     "jwt.access-exp=15m",
     "jwt.refresh-exp=14d"
 ])
@@ -41,7 +42,8 @@ class JwtPropertiesBindingTest {
 
     @Test
     fun `JwtProperties 가 yml 값으로 정상 바인딩된다`() {
-        assertThat(props.secret).isEqualTo("MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE===")
+        assertThat(props.privateKey).isEqualTo(TestJwtKeys.PRIVATE_KEY_B64)
+        assertThat(props.legacySecret).isEqualTo(TestJwtKeys.LEGACY_SECRET_B64)
         assertThat(props.accessExp).isEqualTo(Duration.ofMinutes(15))
         assertThat(props.refreshExp).isEqualTo(Duration.ofDays(14))
     }
