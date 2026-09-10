@@ -51,6 +51,8 @@ grep -v '^-----' jwt-private.pem | tr -d '\n' | pbcopy   # JWT_PRIVATE_KEY 값�
 JWT_PRIVATE_KEY=MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQD...==
 ```
 
+터미널에 찍힌 출력을 마우스로 긁어 복사하지 마세요. zsh 는 줄바꿈 없는 출력 끝에 `%` 를 표시하는데 화면용 기호일 뿐이지만 복사에 딸려 들어가 `...=%` 가 됩니다. 반드시 `pbcopy` 로 복사합니다.
+
 값 뒤에 **주석·따옴표·공백을 붙이지 않습니다.** `# 메모` 처럼 뒤에 붙인 글자는 값의 일부로 읽혀 `jwt.private-key 가 올바른 base64 가 아닙니다 … incorrect ending byte at 1624` 로 기동이 실패합니다. 2048비트 키의 한 줄 base64 는 정확히 1624자이고 `==` 로 끝납니다.
 
 - 청첩장(alpha·prod): `JWT_SECRET` 줄은 그대로 두고 이 줄만 추가합니다(아래 전환 절차).
